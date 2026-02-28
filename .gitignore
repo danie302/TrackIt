@@ -1,0 +1,34 @@
+# Environment and secrets — do not commit
+.env
+.env.local
+.env.*.local
+
+# .env.example is NOT ignored; it must be committed with placeholder variable names only.
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs and runtime
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test / coverage
+coverage/
+.nyc_output/
