@@ -1,6 +1,6 @@
 # TrackIt Docker Configuration
 
-Docker development environment for TrackIt with hot reload support.
+Multi-environment Docker setup for TrackIt.
 
 ## Prerequisites
 
@@ -8,309 +8,163 @@ Docker development environment for TrackIt with hot reload support.
 - Docker Compose V2+
 - At least 4GB RAM allocated to Docker
 
-## Services
+## Structure
 
-The docker-compose configuration includes:
-
-| Service | Port | Description |
-|---------|------|-------------|
-| frontend | 5173 | Vite dev server with hot reload |
-| backend | 3000 | NestJS dev server with hot reload |
-| mongodb | 27017 | MongoDB 7 database |
-| redis | 6379 | Redis 7 cache |
+```
+docker/
+├── docker-compose.yml          # Base service definitions (shared)
+├── docker-compose.dev.yml      # Development overrides (hot reload, ports)
+├── docker-compose.prod.yml     # Production overrides (optimized builds)
+├── docker-compose.test.yml     # Test overrides (test DB)
+├── scripts/                    # Management scripts (bash)
+│   ├── start.sh
+│   ├── stop.sh
+│   ├── restart.sh
+│   ├── build.sh
+│   ├── logs.sh
+│   ├── seed.sh
+│   ├── status.sh
+│   └── clean.sh
+└── seed/                       # Database seed data
+```
 
 ## Quick Start
 
-### Start All Services
+All scripts default to the `dev` environment. Run from the project root.
 
 ```bash
-# Build and start all services
-docker-compose up
+# Start all services (development)
+./docker/scripts/start.sh
 
-# Or run in detached mode (background)
-docker-compose up -d
+# Start in background
+./docker/scripts/start.sh dev -d
+
+# Start a specific service
+./docker/scripts/start.sh dev backend
+
+# Stop all services
+./docker/scripts/stop.sh
+
+# Stop and remove volumes (deletes data)
+./docker/scripts/stop.sh dev -v
+
+# Restart
+./docker/scripts/restart.sh
+./docker/scripts/restart.sh dev backend
+
+# View logs (follows by default)
+./docker/scripts/logs.sh
+./docker/scripts/logs.sh dev backend
+
+# Check status
+./docker/scripts/status.sh
+
+# Build images
+./docker/scripts/build.sh
+./docker/scripts/build.sh dev --no-cache
+
+# Seed database
+./docker/scripts/seed.sh
+./docker/scripts/seed.sh --clean    # Reset + seed
+
+# Full cleanup (removes containers, volumes, images)
+./docker/scripts/clean.sh
+./docker/scripts/clean.sh dev --all  # All environments
 ```
 
-### Stop All Services
+## Environment-Specific Usage
+
+Pass the environment as the first argument:
 
 ```bash
-# Stop services (keeps containers)
-docker-compose stop
+# Production
+./docker/scripts/start.sh prod -d
+./docker/scripts/stop.sh prod
+./docker/scripts/logs.sh prod backend
 
-# Stop and remove containers
-docker-compose down
-
-# Stop, remove containers, and delete volumes (⚠️ deletes data)
-docker-compose down -v
+# Test
+./docker/scripts/start.sh test
 ```
 
-## Individual Service Commands
+## Manual Docker Compose Commands
 
-### Start Specific Services
+All compose files are in `docker/`. You must specify both the base and env override:
 
 ```bash
-# Start only database services
-docker-compose up mongodb redis
+# Development
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
 
-# Start only backend
-docker-compose up backend
+# Production
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
 
-# Start only frontend
-docker-compose up frontend
+# Test
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml up
 ```
 
-### Rebuild Services
+## Services
 
-```bash
-# Rebuild all services
-docker-compose build
+| Service  | Dev Port | Prod Port | Description                         |
+|----------|----------|-----------|-------------------------------------|
+| frontend | 5173     | 80        | Vite dev server / Nginx (prod)      |
+| backend  | 3000     | 3000      | NestJS dev server / Node (prod)     |
+| mongodb  | 27017    | —         | MongoDB 7 database                  |
+| redis    | 6379     | —         | Redis 7 cache                       |
 
-# Rebuild specific service
-docker-compose build backend
+## Environments
 
-# Rebuild and restart
-docker-compose up --build
-```
+### Development (`dev`)
+- Volume mounts for hot reload (frontend + backend source)
+- All ports exposed to host
+- Dev Dockerfiles (`Dockerfile.dev`)
+- Seed data mounted into MongoDB
 
-## Viewing Logs
+### Production (`prod`)
+- Multi-stage production Dockerfiles (`Dockerfile.prod`)
+- Frontend served via Nginx with API proxy
+- No source volume mounts
+- Environment variables read from host/`.env` file
+- Resource limits and restart policies
+- MongoDB auth enabled
+- Redis password required
 
-```bash
-# View all logs
-docker-compose logs
+### Test (`test`)
+- Separate test database (`trackit_test`)
+- Backend runs `npm run test` as its command
+- Uses dev Dockerfiles with source mounts
 
-# Follow logs in real-time
-docker-compose logs -f
+## Accessing Services (Development)
 
-# View logs for specific service
-docker-compose logs -f backend
-
-# View last 100 lines
-docker-compose logs --tail=100
-```
-
-## Accessing Services
-
-### Frontend
-- **URL**: http://localhost:5173
-- **Hot Reload**: Enabled - changes to files in `frontend/src` trigger automatic reload
-
-### Backend
-- **URL**: http://localhost:3000
-- **API**: http://localhost:3000/api
-- **Hot Reload**: Enabled - changes to files in `backend/src` trigger automatic restart
-
-### MongoDB
-- **Connection**: mongodb://localhost:27017/trackit
-- **Database**: trackit
-- **GUI**: Use MongoDB Compass or similar tool
-
-### Redis
-- **Connection**: localhost:6379
-- **CLI**: `docker-compose exec redis redis-cli`
-
-## Executing Commands Inside Containers
-
-### Backend Container
-
-```bash
-# Open shell
-docker-compose exec backend sh
-
-# Run NestJS CLI commands
-docker-compose exec backend nest --help
-
-# Install new package
-docker-compose exec backend npm install package-name
-
-# Run tests
-docker-compose exec backend npm run test
-```
-
-### Frontend Container
-
-```bash
-# Open shell
-docker-compose exec frontend sh
-
-# Install new package
-docker-compose exec frontend npm install package-name
-
-# Run build
-docker-compose exec frontend npm run build
-```
-
-### MongoDB Container
-
-```bash
-# Open MongoDB shell
-docker-compose exec mongodb mongosh trackit
-
-# Backup database
-docker-compose exec mongodb mongodump --db=trackit --out=/data/backup
-
-# Restore database
-docker-compose exec mongodb mongorestore /data/backup
-```
-
-### Redis Container
-
-```bash
-# Open Redis CLI
-docker-compose exec redis redis-cli
-
-# Check Redis info
-docker-compose exec redis redis-cli INFO
-
-# Monitor Redis commands
-docker-compose exec redis redis-cli MONITOR
-```
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:3000
+- **Health Check:** http://localhost:3000/health
+- **MongoDB:** mongodb://localhost:27017/trackit
+- **Redis:** localhost:6379
 
 ## Data Persistence
 
-Data is persisted using Docker named volumes:
-
-- **mongodb_data**: MongoDB database files
-- **redis_data**: Redis persistence files
+Data is persisted via Docker named volumes: `mongodb_data`, `redis_data`.
 
 To delete all data:
 ```bash
-docker-compose down -v
+./docker/scripts/stop.sh dev -v
 ```
-
-## Hot Reload
-
-### Frontend (Vite)
-- Changes to files in `frontend/src` trigger instant hot module replacement
-- No need to restart the container
-
-### Backend (NestJS)
-- Changes to files in `backend/src` trigger automatic server restart
-- Watch mode is enabled by default with `npm run start:dev`
 
 ## Troubleshooting
 
-### Services Won't Start
-
-**Check if ports are already in use:**
+**Ports in use:**
 ```bash
-# Windows
-netstat -ano | findstr :3000
-netstat -ano | findstr :5173
-netstat -ano | findstr :27017
-netstat -ano | findstr :6379
+lsof -i :3000
+lsof -i :5173
+# Windows: netstat -ano | findstr :3000
 ```
 
-**Kill processes using the ports if needed.**
-
-### Hot Reload Not Working
-
-**Frontend:**
-1. Check that files are being watched: `docker-compose logs -f frontend`
-2. Try rebuilding: `docker-compose up --build frontend`
-
-**Backend:**
-1. Check NestJS watch mode is running: `docker-compose logs -f backend`
-2. Try rebuilding: `docker-compose up --build backend`
-
-### MongoDB Connection Issues
-
-**Check MongoDB is healthy:**
+**Full reset:**
 ```bash
-docker-compose ps
-docker-compose logs mongodb
+./docker/scripts/clean.sh
+./docker/scripts/start.sh
 ```
 
-**Test connection:**
+**Check health:**
 ```bash
-docker-compose exec mongodb mongosh trackit --eval "db.runCommand({ ping: 1 })"
+./docker/scripts/status.sh
 ```
-
-### Redis Connection Issues
-
-**Check Redis is healthy:**
-```bash
-docker-compose ps
-docker-compose exec redis redis-cli ping
-```
-
-### Permission Issues (Linux/Mac)
-
-If you encounter permission issues with node_modules:
-```bash
-# Fix ownership
-sudo chown -R $USER:$USER frontend/node_modules
-sudo chown -R $USER:$USER backend/node_modules
-```
-
-### Out of Memory
-
-**Increase Docker memory:**
-- Docker Desktop → Settings → Resources → Memory
-- Allocate at least 4GB
-
-### Clean Slate Restart
-
-If everything is broken, start fresh:
-```bash
-# Stop and remove everything
-docker-compose down -v
-
-# Remove all images
-docker-compose rm -f
-
-# Rebuild and start
-docker-compose up --build
-```
-
-## Environment Variables
-
-Environment variables can be configured in:
-- `docker-compose.yml` - Default development values
-- `frontend/.env.local` - Frontend-specific overrides (not in Docker)
-- `backend/.env` - Backend-specific overrides (not in Docker)
-
-## Health Checks
-
-Services include health checks:
-- **MongoDB**: Pings database every 10s
-- **Redis**: Pings server every 10s
-
-Check service health:
-```bash
-docker-compose ps
-```
-
-## Network
-
-All services communicate via the `trackit-network` bridge network.
-
-Service DNS names:
-- `frontend` - Frontend container
-- `backend` - Backend container
-- `mongodb` - MongoDB container
-- `redis` - Redis container
-
-## Best Practices
-
-1. **Always use `docker-compose down`** before shutting down your computer
-2. **Don't commit `node_modules`** - they're handled by Docker volumes
-3. **Use `docker-compose logs -f`** to debug issues
-4. **Rebuild after dependency changes**: `docker-compose up --build`
-5. **Keep Docker Desktop running** while developing
-
-## Production
-
-⚠️ **WARNING**: This Docker configuration is for **development only**.
-
-For production:
-- Use separate production Dockerfiles
-- Remove volume mounts
-- Use environment-specific configurations
-- Add proper security configurations
-- Use production-grade MongoDB and Redis
-
-## Additional Resources
-
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [MongoDB Docker Hub](https://hub.docker.com/_/mongo)
-- [Redis Docker Hub](https://hub.docker.com/_/redis)

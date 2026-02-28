@@ -1,58 +1,28 @@
-version: '3.8'
-
 services:
-  # Frontend - React + Vite Development Server
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: ../frontend
     container_name: trackit-frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:3000/api
     networks:
       - trackit-network
-    stdin_open: true
-    tty: true
 
-  # Backend - NestJS Development Server
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: ../backend
     container_name: trackit-backend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - MONGODB_URI=mongodb://mongodb:27017/trackit
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - trackit-network
-    stdin_open: true
-    tty: true
 
-  # MongoDB Database
   mongodb:
     image: mongo:7
     container_name: trackit-mongodb
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./docker/seed:/docker-entrypoint-initdb.d
     environment:
       - MONGO_INITDB_DATABASE=trackit
     networks:
@@ -63,12 +33,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: trackit-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -80,14 +47,12 @@ services:
       timeout: 5s
       retries: 5
 
-# Named volumes for data persistence
 volumes:
   mongodb_data:
     driver: local
   redis_data:
     driver: local
 
-# Network for service communication
 networks:
   trackit-network:
     driver: bridge

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule as NestConfigModule } from '@nestjs/config';
+import { ConfigModule as NestConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -11,13 +13,23 @@ import { OrdersModule } from './orders/orders.module';
 import { AuditsModule } from './audits/audits.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ConfigModule } from './config/config.module';
+import { getDatabaseConfig } from './config/database.config';
+import { getRedisConfig } from './config/redis.config';
+import { validate } from './config/env.validation';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate,
     }),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: getDatabaseConfig,
+    }),
+    CacheModule.registerAsync(getRedisConfig()),
     AuthModule,
     UsersModule,
     CompaniesModule,
@@ -27,6 +39,7 @@ import { ConfigModule } from './config/config.module';
     AuditsModule,
     CategoriesModule,
     ConfigModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

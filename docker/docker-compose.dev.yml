@@ -1,0 +1,43 @@
+services:
+  frontend:
+    build:
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+    stdin_open: true
+    tty: true
+
+  backend:
+    build:
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/trackit
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - JWT_ACCESS_TOKEN_EXPIRATION=15m
+      - JWT_REFRESH_TOKEN_EXPIRATION=7d
+    stdin_open: true
+    tty: true
+
+  mongodb:
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./seed:/docker-entrypoint-initdb.d
+
+  redis:
+    ports:
+      - "6379:6379"
