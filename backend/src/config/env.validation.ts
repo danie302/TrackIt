@@ -49,6 +49,14 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  JWT_ACCESS_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_REFRESH_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
   JWT_ACCESS_TOKEN_EXPIRATION?: string;
 
   @IsOptional()

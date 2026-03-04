@@ -6,6 +6,7 @@ import {
   MongooseHealthIndicator,
 } from '@nestjs/terminus';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('health')
 export class HealthController {
@@ -15,6 +16,7 @@ export class HealthController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
+  @Public()
   @Get()
   @HealthCheck()
   check() {
