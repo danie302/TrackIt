@@ -9,7 +9,7 @@ export const getRedisConfig = (): CacheModuleAsyncOptions => ({
     const host = configService.get<string>('REDIS_HOST', 'localhost');
     const port = configService.get<number>('REDIS_PORT', 6379);
     const password = configService.get<string>('REDIS_PASSWORD', '');
-    const ttl = configService.get<number>('REDIS_TTL', 3600) * 1000; // Convert seconds to ms
+    const ttl = configService.get<number>('REDIS_TTL', 3600) * 1000;
 
     const redisUrl = password
       ? `redis://:${password}@${host}:${port}`
