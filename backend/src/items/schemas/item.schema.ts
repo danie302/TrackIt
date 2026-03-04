@@ -1,5 +1,5 @@
 import { Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { CallbackError, Document, Types } from 'mongoose';
 
 export type ItemDocument = Item & Document;
 
@@ -19,8 +19,7 @@ export class Item {
 export const ItemSchema = SchemaFactory.createForClass(Item);
 
 // Pre-save hook for serial uniqueness and price validation
-// @ts-ignore - mongoose type definitions issue with next() return
-ItemSchema.pre('save', async function (next) {
+(ItemSchema as any).pre('save', async function (this: any, next: (err?: CallbackError) => void) {
   const item = this as any;
 
   // Validate prices are positive
@@ -43,7 +42,7 @@ ItemSchema.pre('save', async function (next) {
         return next(new Error(`Item with serial number '${item.serial}' already exists`));
       }
     } catch (error) {
-      return next(error);
+      return next(error as CallbackError);
     }
   }
 

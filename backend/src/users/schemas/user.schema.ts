@@ -1,5 +1,5 @@
 import { Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { CallbackError, Document, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 export enum UserRole {
@@ -45,8 +45,7 @@ export class User {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 // Pre-save hook for password hashing
-// @ts-ignore - mongoose type definitions issue with next() return
-UserSchema.pre('save', async function (next) {
+(UserSchema as any).pre('save', async function (this: any, next: (err?: CallbackError) => void) {
   const user = this as any;
   if (!user.isModified('password')) {
     return next();
@@ -57,7 +56,7 @@ UserSchema.pre('save', async function (next) {
     user.password = await bcrypt.hash(user.password, salt);
     next();
   } catch (error) {
-    return next(error);
+    return next(error as CallbackError);
   }
 });
 

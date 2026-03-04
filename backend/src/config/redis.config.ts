@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { CacheModuleAsyncOptions } from '@nestjs/cache-manager';
+import { CacheModuleAsyncOptions, Cache } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 
 export const getRedisConfig = (): CacheModuleAsyncOptions => ({

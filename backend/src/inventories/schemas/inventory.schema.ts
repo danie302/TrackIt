@@ -1,5 +1,5 @@
 import { Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { CallbackError, Document, Types } from 'mongoose';
 
 export type InventoryDocument = Inventory & Document;
 
@@ -27,12 +27,10 @@ InventorySchema.virtual('whitelistDetails', {
 });
 
 // Pre-save hook for validation
-// @ts-ignore - mongoose type definitions issue with next() return
-InventorySchema.pre('save', function (next) {
+(InventorySchema as any).pre('save', function (this: any, next: (err?: CallbackError) => void) {
   const inv = this as any;
   if (inv.isResellerInventory && !inv.resellerId) {
     return next(new Error('resellerId is required when isResellerInventory is true'));
-    return;
   }
   next();
 });
