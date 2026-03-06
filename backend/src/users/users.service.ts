@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserDocument, UserRole } from './schemas/user.schema';
+import { AuditsService } from '../audits/audits.service';
+import { EntityType, AuditAction } from '../audits/schemas/audit.schema';
 import {
   normalizeLimit,
   paginateSkip,
@@ -9,11 +11,77 @@ import {
   type PaginatedResult,
 } from '../common/pagination.dto';
 
+export interface CreateUserDto {
+  name: string;
+  email: string;
+  username: string;
+  password: string;
+  cel: string;
+  dni: string;
+  typeOfDni: string;
+  role: UserRole;
+  companyId?: Types.ObjectId;
+  isActive?: boolean;
+}
+
+export interface UpdateUserDto {
+  name?: string;
+  email?: string;
+  username?: string;
+  cel?: string;
+  dni?: string;
+  typeOfDni?: string;
+  role?: UserRole;
+  companyId?: Types.ObjectId;
+  isActive?: boolean;
+}
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel('User') private userModel: Model<UserDocument>,
+    private auditsService: AuditsService,
   ) {}
+
+  async createUser(dto: CreateUserDto, actorId: string): Promise<UserDocument> {
+    const existingEmail = await this.userModel.findOne({ email: dto.email.trim().toLowerCase() }).exec();
+    if (existingEmail) {
+      throw new ConflictException('Email already in use');
+    }
+
+    const existingUsername = await this.userModel.findOne({ username: dto.username }).exec();
+    if (existingUsername) {
+      throw new ConflictException('Username already in use');
+    }
+
+    const user = await this.userModel.create({
+      name: dto.name,
+      email: dto.email.trim().toLowerCase(),
+      username: dto.username,
+      password: dto.password, // Password will be hashed by the pre-save hook
+      cel: dto.cel,
+      dni: dto.dni,
+      typeOfDni: dto.typeOfDni,
+      role: dto.role,
+      companyId: dto.companyId,
+      isActive: dto.isActive ?? true,
+    });
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.USER,
+      entityId: user._id,
+      action: AuditAction.CREATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Created user: ${user.name} (${user.username})`,
+      companyId: user.companyId,
+      metadata: {
+        role: user.role,
+      },
+    });
+
+    return user;
+  }
 
   async findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
@@ -61,7 +129,13 @@ export class UsersService {
   async updateUser(
     id: string,
     updates: Partial<{ name: string; email: string; username: string; cel: string; dni: string }>,
+    actorId: string,
   ): Promise<UserDocument> {
+    const oldUser = await this.userModel.findById(id).exec();
+    if (!oldUser) {
+      throw new NotFoundException('User not found');
+    }
+
     if (updates.email !== undefined) {
       const existing = await this.userModel
         .findOne({ email: updates.email.trim().toLowerCase(), _id: { $ne: id } })
@@ -85,10 +159,24 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.USER,
+      entityId: user._id,
+      action: AuditAction.UPDATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Updated user: ${user.name} (${user.username})`,
+      companyId: user.companyId,
+      metadata: {
+        changes: updates,
+      },
+    });
+
     return user;
   }
 
-  async deactivateUser(id: string): Promise<UserDocument> {
+  async deactivateUser(id: string, actorId: string): Promise<UserDocument> {
     const user = await this.userModel
       .findByIdAndUpdate(id, { $set: { isActive: false } }, { new: true })
       .select('-password')
@@ -96,6 +184,17 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.USER,
+      entityId: user._id,
+      action: AuditAction.DEACTIVATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Deactivated user: ${user.name} (${user.username})`,
+      companyId: user.companyId,
+    });
+
     return user;
   }
 

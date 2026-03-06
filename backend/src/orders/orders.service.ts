@@ -188,6 +188,7 @@ export class OrdersService {
       await this.itemsService.moveItemBetweenInventories(
         itemId.toString(),
         order.targetInventoryId.toString(),
+        approvedBy,
       );
     }
     const updated = await this.orderModel

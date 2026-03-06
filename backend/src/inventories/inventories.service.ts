@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { InventoryDocument } from './schemas/inventory.schema';
 import { UserRole } from '../users/schemas/user.schema';
+import { AuditsService } from '../audits/audits.service';
+import { EntityType, AuditAction } from '../audits/schemas/audit.schema';
 import {
   normalizeLimit,
   paginateSkip,
@@ -32,13 +34,14 @@ export interface UpdateInventoryDto {
 export class InventoriesService {
   constructor(
     @InjectModel('Inventory') private inventoryModel: Model<InventoryDocument>,
+    private auditsService: AuditsService,
   ) {}
 
-  async createInventory(dto: CreateInventoryDto): Promise<InventoryDocument> {
+  async createInventory(dto: CreateInventoryDto, actorId: string): Promise<InventoryDocument> {
     if (dto.isResellerInventory && !dto.resellerId) {
       throw new BadRequestException('resellerId is required for reseller inventory');
     }
-    return this.inventoryModel.create({
+    const inventory = await this.inventoryModel.create({
       name: dto.name,
       companyId: new Types.ObjectId(dto.companyId),
       isResellerInventory: dto.isResellerInventory,
@@ -46,6 +49,21 @@ export class InventoriesService {
       categories: (dto.categories ?? []).map((id) => new Types.ObjectId(id)),
       whitelist: [],
     });
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.INVENTORY,
+      entityId: inventory._id,
+      action: AuditAction.CREATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Created inventory: ${inventory.name}`,
+      companyId: inventory.companyId,
+      metadata: {
+        isResellerInventory: inventory.isResellerInventory,
+      },
+    });
+
+    return inventory;
   }
 
   async getInventoryById(id: string): Promise<InventoryDocument> {
@@ -145,17 +163,37 @@ export class InventoriesService {
   async updateInventory(
     id: string,
     dto: UpdateInventoryDto,
+    actorId: string,
   ): Promise<InventoryDocument> {
+    const oldInv = await this.inventoryModel.findById(id).exec();
+    if (!oldInv) {
+      throw new NotFoundException('Inventory not found');
+    }
+
     const inv = await this.inventoryModel
       .findByIdAndUpdate(id, { $set: dto }, { new: true })
       .exec();
     if (!inv) {
       throw new NotFoundException('Inventory not found');
     }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.INVENTORY,
+      entityId: inv._id,
+      action: AuditAction.UPDATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Updated inventory: ${inv.name}`,
+      companyId: inv.companyId,
+      metadata: {
+        changes: dto,
+      },
+    });
+
     return inv;
   }
 
-  async deleteInventory(id: string): Promise<void> {
+  async deleteInventory(id: string, actorId: string): Promise<void> {
     const inv = await this.getInventoryById(id);
     const ItemModel = this.inventoryModel.db.model('Item');
     const itemCount = await ItemModel.countDocuments({
@@ -170,11 +208,22 @@ export class InventoriesService {
     if (result.deletedCount === 0) {
       throw new NotFoundException('Inventory not found');
     }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.INVENTORY,
+      entityId: inv._id,
+      action: AuditAction.DELETE,
+      actor: new Types.ObjectId(actorId),
+      description: `Deleted inventory: ${inv.name}`,
+      companyId: inv.companyId,
+    });
   }
 
   async addResellerToWhitelist(
     inventoryId: string,
     resellerId: string,
+    actorId: string,
   ): Promise<InventoryDocument> {
     const inv = await this.getInventoryById(inventoryId);
     if (inv.isResellerInventory) {
@@ -191,12 +240,31 @@ export class InventoriesService {
         { new: true },
       )
       .exec();
-    return updated!;
+    if (!updated) {
+      throw new NotFoundException('Inventory not found');
+    }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.INVENTORY,
+      entityId: updated._id,
+      action: AuditAction.UPDATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Added reseller to whitelist for inventory: ${updated.name}`,
+      companyId: updated.companyId,
+      metadata: {
+        resellerId,
+        action: 'add_to_whitelist',
+      },
+    });
+
+    return updated;
   }
 
   async removeResellerFromWhitelist(
     inventoryId: string,
     resellerId: string,
+    actorId: string,
   ): Promise<InventoryDocument> {
     const updated = await this.inventoryModel
       .findByIdAndUpdate(
@@ -208,6 +276,21 @@ export class InventoriesService {
     if (!updated) {
       throw new NotFoundException('Inventory not found');
     }
+
+    // Create audit record
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.INVENTORY,
+      entityId: updated._id,
+      action: AuditAction.UPDATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Removed reseller from whitelist for inventory: ${updated.name}`,
+      companyId: updated.companyId,
+      metadata: {
+        resellerId,
+        action: 'remove_from_whitelist',
+      },
+    });
+
     return updated;
   }
 }
