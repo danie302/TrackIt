@@ -31,6 +31,7 @@ export class Audit {
   actor!: Types.ObjectId;
   description!: string;
   metadata?: Record<string, any>;
+  companyId?: Types.ObjectId;
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -44,3 +45,4 @@ AuditSchema.index({ actor: 1 });
 AuditSchema.index({ createdAt: -1 });
 AuditSchema.index({ entityId: 1, createdAt: -1 });
 AuditSchema.index({ actor: 1, createdAt: -1 });
+AuditSchema.index({ companyId: 1, createdAt: -1 });
