@@ -1,4 +1,4 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum OrderType {
@@ -16,17 +16,39 @@ export type OrderRequestDocument = OrderRequest & Document;
 
 @Schema({ timestamps: true })
 export class OrderRequest {
+  @Prop({ required: true, enum: OrderType })
   orderType!: OrderType;
+
+  @Prop({ required: true, enum: OrderStatus, default: OrderStatus.PENDING })
   status!: OrderStatus;
+
+  @Prop({ type: Types.ObjectId, required: true })
   creator!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, required: true })
   companyId!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, required: true })
   sourceInventoryId!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, required: true })
   targetInventoryId!: Types.ObjectId;
+
+  @Prop()
   rejectionReason?: string;
+
+  @Prop()
   devolutionReason?: string;
+
+  @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   items!: Types.ObjectId[];
+
+  @Prop({ type: Types.ObjectId })
   approvedBy?: Types.ObjectId;
+
+  @Prop()
   approvedAt?: Date;
+
   createdAt!: Date;
   updatedAt!: Date;
 

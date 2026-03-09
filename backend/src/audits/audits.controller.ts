@@ -6,6 +6,8 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuditsService } from './audits.service';
 import { AuditResponseDto, AuditQueryDto } from './dto/audit.dto';
@@ -56,7 +58,7 @@ export class AuditsController {
       // Users can only see their own audit trail unless they are MASTER_ADMIN
       if (currentUser?.role !== UserRole.MASTER_ADMIN) {
         if (actor !== currentUser._id.toString()) {
-          throw new Error('You can only view your own audit trail');
+          throw new ForbiddenException('You can only view your own audit trail');
         }
       }
 
@@ -70,7 +72,7 @@ export class AuditsController {
     // If filtering by company
     // TODO: Add companyId query parameter
 
-    throw new Error('Please specify entityType+entityId or actor');
+    throw new BadRequestException('Please specify entityType+entityId or actor');
   }
 
   @Get('item/:itemId/trail')
@@ -109,7 +111,7 @@ export class AuditsController {
       );
     }
 
-    throw new Error('Unauthorized');
+    throw new ForbiddenException('Unauthorized');
   }
 
   private toResponseDto(audit: any): AuditResponseDto {

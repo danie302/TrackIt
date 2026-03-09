@@ -9,6 +9,10 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
+  ForbiddenException,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService, CreateUserDto, UpdateUserDto } from './users.service';
 import {
@@ -39,13 +43,13 @@ export class UsersController {
       if (!createUserDto.companyId) {
         createUserDto.companyId = currentUser.companyId;
       } else if (createUserDto.companyId !== currentUser.companyId?.toString()) {
-        throw new Error('You can only create users in your own company');
+        throw new ForbiddenException('You can only create users in your own company');
       }
     }
 
     // Check role hierarchy
     if (!this.usersService.checkRoleHierarchy(currentUser.role, createUserDto.role)) {
-      throw new Error('Cannot create a user with higher or equal role');
+      throw new ForbiddenException('Cannot create a user with higher or equal role');
     }
 
     const user = await this.usersService.createUser(
@@ -82,7 +86,7 @@ export class UsersController {
       changePasswordDto.currentPassword,
     );
     if (!isPasswordValid) {
-      throw new Error('Current password is incorrect');
+      throw new UnauthorizedException('Current password is incorrect');
     }
 
     const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
@@ -94,18 +98,18 @@ export class UsersController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @CurrentUser() currentUser: any,
+    @Query('role') role?: UserRole,
+    @CurrentUser() currentUser?: any,
   ): Promise<any> {
-    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+    if (currentUser?.role === UserRole.COMPANY_ADMIN) {
       return this.usersService.getUsersByCompany(
         currentUser.companyId.toString(),
         page,
         limit,
+        role,
       );
     }
-    // MASTER_ADMIN can see all users (we need to implement getAllUsers)
-    // For now, return empty result
-    return { data: [], total: 0, page, limit, totalPages: 0 };
+    return this.usersService.getAllUsers(page, limit, role);
   }
 
   @Get(':id')
@@ -116,20 +120,20 @@ export class UsersController {
     // Users can only see their own profile unless they are MASTER_ADMIN or COMPANY_ADMIN
     if (currentUser.role !== UserRole.MASTER_ADMIN && currentUser.role !== UserRole.COMPANY_ADMIN) {
       if (currentUser._id.toString() !== id) {
-        throw new Error('You can only view your own profile');
+        throw new ForbiddenException('You can only view your own profile');
       }
     }
 
     // COMPANY_ADMIN can only see users in their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (currentUser.companyId?.toString() !== id) {
-        throw new Error('You can only view users in your own company');
+        throw new ForbiddenException('You can only view users in your own company');
       }
     }
 
     const user = await this.usersService.findById(id);
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
     return this.toResponseDto(user);
   }
@@ -145,14 +149,14 @@ export class UsersController {
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       const user = await this.usersService.findById(id);
       if (!user || user.companyId?.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only update users in your own company');
+        throw new ForbiddenException('You can only update users in your own company');
       }
     }
 
     // Check role hierarchy if changing role
     if (updateUserDto.role) {
       if (!this.usersService.checkRoleHierarchy(currentUser.role, updateUserDto.role)) {
-        throw new Error('Cannot assign a higher or equal role');
+        throw new ForbiddenException('Cannot assign a higher or equal role');
       }
     }
 
@@ -174,14 +178,14 @@ export class UsersController {
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       const user = await this.usersService.findById(id);
       if (!user || user.companyId?.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only deactivate users in your own company');
+        throw new ForbiddenException('You can only deactivate users in your own company');
       }
     }
 
     // Check role hierarchy
     const targetUser = await this.usersService.findById(id);
     if (targetUser && !this.usersService.checkRoleHierarchy(currentUser.role, targetUser.role)) {
-      throw new Error('Cannot deactivate a user with higher or equal role');
+      throw new ForbiddenException('Cannot deactivate a user with higher or equal role');
     }
 
     const user = await this.usersService.deactivateUser(

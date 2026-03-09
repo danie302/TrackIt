@@ -12,6 +12,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InventoriesService, CreateInventoryDto, UpdateInventoryDto } from './inventories.service';
 import {
@@ -40,7 +42,7 @@ export class InventoriesController {
     // COMPANY_ADMIN can only create company inventories
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (createInventoryDto.companyId !== currentUser.companyId?.toString()) {
-        throw new Error('You can only create inventories in your own company');
+        throw new ForbiddenException('You can only create inventories in your own company');
       }
       createInventoryDto.isResellerInventory = false;
     }
@@ -80,14 +82,14 @@ export class InventoriesController {
       if (resellerId) {
         return this.inventoriesService.getResellerInventories(resellerId);
       }
-      throw new Error('Please specify companyId or resellerId');
+      throw new BadRequestException('Please specify companyId or resellerId');
     }
 
     // COMPANY_ADMIN can see their company's inventories
     if (currentUser?.role === UserRole.COMPANY_ADMIN) {
       const userCompanyId = currentUser.companyId?.toString();
       if (!userCompanyId) {
-        throw new Error('User company not found');
+        throw new BadRequestException('User company not found');
       }
       return this.inventoriesService.getInventoriesByCompany(
         userCompanyId,
@@ -109,7 +111,7 @@ export class InventoriesController {
       );
     }
 
-    throw new Error('Unauthorized');
+    throw new ForbiddenException('Unauthorized');
   }
 
   @Get(':id')
@@ -143,12 +145,12 @@ export class InventoriesController {
 
     // COMPANY_ADMIN can only update company inventories
     if (currentUser.role === UserRole.COMPANY_ADMIN && inventory.isResellerInventory) {
-      throw new Error('Company admins can only update company inventories');
+      throw new ForbiddenException('Company admins can only update company inventories');
     }
 
     // RESELLER can only update their own inventories
     if (currentUser.role === UserRole.RESELLER && !inventory.isResellerInventory) {
-      throw new Error('Resellers can only update their own inventories');
+      throw new ForbiddenException('Resellers can only update their own inventories');
     }
 
     const updated = await this.inventoriesService.updateInventory(
@@ -176,12 +178,12 @@ export class InventoriesController {
 
     // COMPANY_ADMIN can only delete company inventories
     if (currentUser.role === UserRole.COMPANY_ADMIN && inventory.isResellerInventory) {
-      throw new Error('Company admins can only delete company inventories');
+      throw new ForbiddenException('Company admins can only delete company inventories');
     }
 
     // RESELLER can only delete their own inventories
     if (currentUser.role === UserRole.RESELLER && !inventory.isResellerInventory) {
-      throw new Error('Resellers can only delete their own inventories');
+      throw new ForbiddenException('Resellers can only delete their own inventories');
     }
 
     await this.inventoriesService.deleteInventory(id, currentUser._id.toString());
@@ -199,7 +201,7 @@ export class InventoriesController {
     // COMPANY_ADMIN can only modify their own company's inventories
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (inventory.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only modify your own company\'s inventories');
+        throw new ForbiddenException('You can only modify your own company\'s inventories');
       }
     }
 
@@ -224,7 +226,7 @@ export class InventoriesController {
     // COMPANY_ADMIN can only modify their own company's inventories
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (inventory.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only modify your own company\'s inventories');
+        throw new ForbiddenException('You can only modify your own company\'s inventories');
       }
     }
 

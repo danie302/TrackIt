@@ -1,17 +1,31 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CallbackError, Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
 
 export type ItemDocument = Item & Document;
 
 @Schema({ timestamps: true })
 export class Item {
+  @Prop({ required: true })
   name!: string;
+
+  @Prop({ required: true })
   brand!: string;
+
+  @Prop({ required: true })
   serial!: string;
+
+  @Prop({ required: true })
   price!: number;
+
+  @Prop({ required: true })
   retailPrice!: number;
+
+  @Prop({ type: Types.ObjectId, required: true })
   inventoryId!: Types.ObjectId;
+
+  @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   categories!: Types.ObjectId[];
+
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -19,34 +33,23 @@ export class Item {
 export const ItemSchema = SchemaFactory.createForClass(Item);
 
 // Pre-save hook for serial uniqueness and price validation
-(ItemSchema as any).pre('save', async function (this: any, next: (err?: CallbackError) => void) {
-  const item = this as any;
-
-  // Validate prices are positive
-  if (item.price !== undefined && item.price < 0) {
-    return next(new Error('Price must be a positive number'));
+ItemSchema.pre('save', async function (this: any) {
+  if (this.price !== undefined && this.price < 0) {
+    throw new Error('Price must be a positive number');
   }
-  if (item.retailPrice !== undefined && item.retailPrice < 0) {
-    return next(new Error('Retail price must be a positive number'));
+  if (this.retailPrice !== undefined && this.retailPrice < 0) {
+    throw new Error('Retail price must be a positive number');
   }
 
-  // Validate serial number uniqueness before saving
-  if (item.isNew || item.isModified('serial')) {
-    try {
-      const existingItem = await (this.constructor as any).findOne({
-        serial: item.serial,
-        _id: { $ne: item._id },
-      });
-
-      if (existingItem) {
-        return next(new Error(`Item with serial number '${item.serial}' already exists`));
-      }
-    } catch (error) {
-      return next(error as CallbackError);
+  if (this.isNew || this.isModified('serial')) {
+    const existingItem = await (this.constructor as any).findOne({
+      serial: this.serial,
+      _id: { $ne: this._id },
+    });
+    if (existingItem) {
+      throw new Error(`Item with serial number '${this.serial}' already exists`);
     }
   }
-
-  next();
 });
 
 // Indexes

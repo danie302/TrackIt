@@ -410,7 +410,10 @@ export default function CompanyDetailPage() {
               notify('User created', 'success')
               setUserDialogOpen(false)
               userForm.reset()
-              await fetchCompanyUsers(id, { page: 1, limit: userLimit })
+              await Promise.all([
+                fetchCompanyUsers(id, { page: 1, limit: userLimit }),
+                fetchCompanyById(id),
+              ])
               setUserPage(0)
             } catch {
               // store handles error

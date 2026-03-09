@@ -1,4 +1,4 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum EntityType {
@@ -25,13 +25,27 @@ export type AuditDocument = Audit & Document;
 
 @Schema({ timestamps: true })
 export class Audit {
+  @Prop({ required: true, enum: EntityType })
   entityType!: EntityType;
+
+  @Prop({ type: Types.ObjectId, required: true })
   entityId!: Types.ObjectId;
+
+  @Prop({ required: true, enum: AuditAction })
   action!: AuditAction;
+
+  @Prop({ type: Types.ObjectId, required: true })
   actor!: Types.ObjectId;
+
+  @Prop({ required: true })
   description!: string;
+
+  @Prop({ type: Object })
   metadata?: Record<string, any>;
+
+  @Prop({ type: Types.ObjectId })
   companyId?: Types.ObjectId;
+
   createdAt!: Date;
   updatedAt!: Date;
 }

@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
 import {
@@ -72,7 +73,7 @@ export class CompaniesController {
     // COMPANY_ADMIN can only update their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (currentUser.companyId?.toString() !== id) {
-        throw new Error('You can only update your own company');
+        throw new ForbiddenException('You can only update your own company');
       }
     }
 
@@ -95,7 +96,7 @@ export class CompaniesController {
     // Users can only see users in their own company unless they are MASTER_ADMIN
     if (currentUser.role !== UserRole.MASTER_ADMIN) {
       if (currentUser.companyId?.toString() !== id) {
-        throw new Error('You can only view users in your own company');
+        throw new ForbiddenException('You can only view users in your own company');
       }
     }
 
@@ -110,8 +111,8 @@ export class CompaniesController {
       nit: company.nit,
       logo: company.logo,
       userCount: company.userCount,
-      createdAt: company.createdAt ?? company.created_at,
-      updatedAt: company.updatedAt ?? company.updated_at,
+      createdAt: company.createdAt,
+      updatedAt: company.updatedAt,
     };
   }
 }

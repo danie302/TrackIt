@@ -12,6 +12,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { ItemsService, CreateItemDto, UpdateItemDto } from './items.service';
 import {
@@ -55,7 +56,7 @@ export class ItemsController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
   ): Promise<any> {
     if (!inventoryId) {
-      throw new Error('Inventory ID is required');
+      throw new BadRequestException('Inventory ID is required');
     }
 
     return this.itemsService.getItemsByInventory(

@@ -12,6 +12,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CategoriesService, CreateCategoryDto, UpdateCategoryDto } from './categories.service';
 import {
@@ -38,7 +40,7 @@ export class CategoriesController {
     // COMPANY_ADMIN can only create categories in their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (createCategoryDto.companyId !== currentUser.companyId?.toString()) {
-        throw new Error('You can only create categories in your own company');
+        throw new ForbiddenException('You can only create categories in your own company');
       }
     }
 
@@ -62,11 +64,11 @@ export class CategoriesController {
       if (currentUser?.role === UserRole.COMPANY_ADMIN) {
         const userCompanyId = currentUser.companyId?.toString();
         if (!userCompanyId) {
-          throw new Error('Company ID is required');
+          throw new BadRequestException('Company ID is required');
         }
         finalCompanyId = userCompanyId;
       } else {
-        throw new Error('Company ID is required');
+        throw new BadRequestException('Company ID is required');
       }
     } else {
       finalCompanyId = companyId;
@@ -75,7 +77,7 @@ export class CategoriesController {
     // COMPANY_ADMIN can only view categories in their own company
     if (currentUser?.role === UserRole.COMPANY_ADMIN) {
       if (finalCompanyId !== currentUser.companyId?.toString()) {
-        throw new Error('You can only view categories in your own company');
+        throw new ForbiddenException('You can only view categories in your own company');
       }
     }
 
@@ -96,7 +98,7 @@ export class CategoriesController {
     // COMPANY_ADMIN can only view categories in their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (category.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only view categories in your own company');
+        throw new ForbiddenException('You can only view categories in your own company');
       }
     }
 
@@ -115,7 +117,7 @@ export class CategoriesController {
     // COMPANY_ADMIN can only update categories in their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (category.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only update categories in your own company');
+        throw new ForbiddenException('You can only update categories in your own company');
       }
     }
 
@@ -139,7 +141,7 @@ export class CategoriesController {
     // COMPANY_ADMIN can only delete categories in their own company
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (category.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only delete categories in your own company');
+        throw new ForbiddenException('You can only delete categories in your own company');
       }
     }
 

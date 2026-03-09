@@ -79,8 +79,8 @@ export class CompaniesService {
             description: 1,
             nit: 1,
             logo: 1,
-            createdAt: '$created_at',
-            updatedAt: '$updated_at',
+            createdAt: 1,
+            updatedAt: 1,
           },
         },
       ])

@@ -1,13 +1,19 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export type CategoryDocument = Category & Document;
 
 @Schema({ timestamps: true })
 export class Category {
+  @Prop({ required: true })
   name!: string;
+
+  @Prop({ type: Types.ObjectId, required: true })
   companyId!: Types.ObjectId;
+
+  @Prop({ type: [{ type: Types.ObjectId }] })
   items?: Types.ObjectId[];
+
   createdAt!: Date;
   updatedAt!: Date;
 }

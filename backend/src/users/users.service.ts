@@ -65,7 +65,7 @@ export class UsersService {
       dni: dto.dni,
       typeOfDni: dto.typeOfDni,
       role: dto.role,
-      companyId: dto.companyId,
+      companyId: dto.companyId ? new Types.ObjectId(dto.companyId.toString()) : undefined,
       isActive: dto.isActive ?? true,
     });
 
@@ -109,6 +109,27 @@ export class UsersService {
     if (result.matchedCount === 0) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  async getAllUsers(
+    page = 1,
+    limit = 10,
+    role?: UserRole,
+  ): Promise<PaginatedResult<UserDocument>> {
+    const l = normalizeLimit(limit);
+    const filter: Record<string, unknown> = {};
+    if (role) filter.role = role;
+    const [data, total] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(paginateSkip(page, l))
+        .limit(l)
+        .exec(),
+      this.userModel.countDocuments(filter).exec(),
+    ]);
+    return toPaginatedResult(data, total, page, l);
   }
 
   async getUsersByCompany(

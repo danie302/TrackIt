@@ -1,17 +1,31 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CallbackError, Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
 
 export type InventoryDocument = Inventory & Document;
 
 @Schema({ timestamps: true })
 export class Inventory {
+  @Prop({ required: true })
   name!: string;
+
+  @Prop({ type: Types.ObjectId, required: true })
   companyId!: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
   resellerId?: Types.ObjectId;
+
+  @Prop({ required: true, default: false })
   isResellerInventory!: boolean;
+
+  @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   categories!: Types.ObjectId[];
+
+  @Prop({ type: [{ type: Types.ObjectId }], default: [] })
   whitelist!: Types.ObjectId[];
+
+  @Prop({ type: [{ type: Types.ObjectId }] })
   items?: Types.ObjectId[];
+
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -27,12 +41,10 @@ InventorySchema.virtual('whitelistDetails', {
 });
 
 // Pre-save hook for validation
-(InventorySchema as any).pre('save', function (this: any, next: (err?: CallbackError) => void) {
-  const inv = this as any;
-  if (inv.isResellerInventory && !inv.resellerId) {
-    return next(new Error('resellerId is required when isResellerInventory is true'));
+InventorySchema.pre('save', function (this: any) {
+  if (this.isResellerInventory && !this.resellerId) {
+    throw new Error('resellerId is required when isResellerInventory is true');
   }
-  next();
 });
 
 // Indexes

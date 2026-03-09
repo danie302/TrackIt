@@ -11,6 +11,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrdersService, CreateStandardOrderDto, CreateDevolutionOrderDto } from './orders.service';
 import {
@@ -101,14 +103,14 @@ export class OrdersController {
           status as any,
         );
       }
-      throw new Error('Please specify companyId or resellerId');
+      throw new BadRequestException('Please specify companyId or resellerId');
     }
 
     // COMPANY_ADMIN can see orders for their company
     if (currentUser?.role === UserRole.COMPANY_ADMIN) {
       const userCompanyId = currentUser.companyId?.toString();
       if (!userCompanyId) {
-        throw new Error('User company not found');
+        throw new BadRequestException('User company not found');
       }
       return this.ordersService.getOrdersByCompany(
         userCompanyId,
@@ -128,7 +130,7 @@ export class OrdersController {
       );
     }
 
-    throw new Error('Unauthorized');
+    throw new ForbiddenException('Unauthorized');
   }
 
   @Get(':id')
@@ -142,13 +144,13 @@ export class OrdersController {
     // Check access based on user role
     if (currentUser.role === UserRole.RESELLER) {
       if (order.creator.toString() !== currentUser._id.toString()) {
-        throw new Error('You can only view your own orders');
+        throw new ForbiddenException('You can only view your own orders');
       }
     }
 
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only view orders for your company');
+        throw new ForbiddenException('You can only view orders for your company');
       }
     }
 
@@ -165,7 +167,7 @@ export class OrdersController {
     const order = await this.ordersService.getOrderById(id);
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only approve orders for your company');
+        throw new ForbiddenException('You can only approve orders for your company');
       }
     }
 
@@ -187,7 +189,7 @@ export class OrdersController {
     const order = await this.ordersService.getOrderById(id);
     if (currentUser.role === UserRole.COMPANY_ADMIN) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
-        throw new Error('You can only reject orders for your company');
+        throw new ForbiddenException('You can only reject orders for your company');
       }
     }
 
