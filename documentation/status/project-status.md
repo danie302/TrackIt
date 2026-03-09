@@ -17,7 +17,7 @@
 | 3 | Business Logic Services | 7 | 39h | Complete | 100% |
 | 4 | API Endpoints | 9 | 30h | Complete | 100% |
 | 5 | Email & Notifications | 3 | 10h | Complete | 100% |
-| 6 | Backend Testing | 3 | 15h | Not Started | 0% |
+| 6 | Backend Testing | 3 | 15h | Complete | 100% |
 | 7 | Frontend Foundation | 6 | 20h | Not Started | 0% |
 | 8 | Auth Screens | 4 | 12h | Not Started | 0% |
 | 9 | Master Admin Screens | 3 | 10h | Not Started | 0% |
@@ -34,9 +34,9 @@
 | 20 | Deployment | 4 | 15h | Not Started | 0% |
 
 **Total:** 21 phases, ~114 stories, ~332 hours
-**Completed:** 7 phases (0, 1, 2, 3, 4, 5, 15), ~41 stories, ~149 hours
-**Remaining:** 14 phases, ~73 stories, ~183 hours
-**Overall:** ~45% complete
+**Completed:** 8 phases (0, 1, 2, 3, 4, 5, 6, 15), ~44 stories, ~164 hours
+**Remaining:** 13 phases, ~70 stories, ~168 hours
+**Overall:** ~49% complete
 
 ---
 
@@ -183,10 +183,9 @@ None
 - Ready to begin Phase 4: API Endpoints
 
 **Next Immediate Steps:**
-1. Begin Phase 6: Backend Testing (unit + integration tests, 80%+ coverage target)
-2. Begin Phase 7: Frontend Foundation (Critical — frontend is bare Vite scaffold)
-3. Begin Phase 8: Auth Screens (login, register, forgot/reset password)
-4. Plan Phase 10: Company Admin Screens (highest-value frontend phase)
+1. Begin Phase 7: Frontend Foundation (verify existing scaffold compiles and routes work)
+2. Begin Phase 8: Auth Screens (login, register, forgot/reset password)
+3. Plan Phase 10: Company Admin Screens (highest-value frontend phase)
 
 **Dependencies (all met for frontend work):**
 - Backend API fully implemented and running in Docker
