@@ -147,7 +147,7 @@ documentation/
 2. ✅ Phase 1: Data Models
 3. ✅ Phase 2: Auth & Authorization
 4. ✅ Phase 3: Business Logic
-5. 🔲 Phase 5: Core API Endpoints
+5. ✅ Phase 4: Core API Endpoints
 6. 🔲 Phase 7: Frontend Foundation
 7. 🔲 Phase 8: Auth Screens
 8. 🔲 Phase 10: Company Admin Screens

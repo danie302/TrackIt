@@ -21,6 +21,8 @@ import {
   toPaginatedResult,
   type PaginatedResult,
 } from '../common/pagination.dto';
+import { EmailService } from '../email/email.service';
+import { UsersService } from '../users/users.service';
 
 export interface CreateStandardOrderDto {
   creatorId: string;
@@ -46,6 +48,8 @@ export class OrdersService {
     private inventoriesService: InventoriesService,
     private itemsService: ItemsService,
     private auditsService: AuditsService,
+    private emailService: EmailService,
+    private usersService: UsersService,
   ) {}
 
   async createStandardOrder(
@@ -212,6 +216,13 @@ export class OrdersService {
       description: 'Order approved',
       companyId: order.companyId,
     });
+
+    void this.notifyCreator(order.creator.toString(), {
+      orderId: String(order._id),
+      orderType: order.orderType as 'Standard' | 'Devolution',
+      itemCount: order.items.length,
+    }, 'approved');
+
     return updated!;
   }
 
@@ -250,6 +261,32 @@ export class OrdersService {
       metadata: { rejectionReason: reason.trim() },
       companyId: order.companyId,
     });
+
+    void this.notifyCreator(order.creator.toString(), {
+      orderId: String(order._id),
+      orderType: order.orderType as 'Standard' | 'Devolution',
+      itemCount: order.items.length,
+      rejectionReason: reason.trim(),
+    }, 'rejected');
+
     return updated!;
+  }
+
+  private async notifyCreator(
+    creatorId: string,
+    ctx: Parameters<EmailService['sendOrderApprovedEmail']>[1],
+    outcome: 'approved' | 'rejected',
+  ): Promise<void> {
+    try {
+      const creator = await this.usersService.findById(creatorId);
+      if (!creator) return;
+      if (outcome === 'approved') {
+        await this.emailService.sendOrderApprovedEmail(creator.email, ctx);
+      } else {
+        await this.emailService.sendOrderRejectedEmail(creator.email, ctx);
+      }
+    } catch {
+      // email failures must not affect order processing
+    }
   }
 }

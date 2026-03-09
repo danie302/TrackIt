@@ -6,6 +6,7 @@ import { OrdersController } from './orders.controller';
 import { InventoriesModule } from '../inventories/inventories.module';
 import { ItemsModule } from '../items/items.module';
 import { AuditsModule } from '../audits/audits.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuditsModule } from '../audits/audits.module';
     InventoriesModule,
     ItemsModule,
     AuditsModule,
+    UsersModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

@@ -10,6 +10,7 @@ import {
   toPaginatedResult,
   type PaginatedResult,
 } from '../common/pagination.dto';
+import { EmailService } from '../email/email.service';
 
 export interface CreateUserDto {
   name: string;
@@ -41,6 +42,7 @@ export class UsersService {
   constructor(
     @InjectModel('User') private userModel: Model<UserDocument>,
     private auditsService: AuditsService,
+    private emailService: EmailService,
   ) {}
 
   async createUser(dto: CreateUserDto, actorId: string): Promise<UserDocument> {
@@ -79,6 +81,8 @@ export class UsersService {
         role: user.role,
       },
     });
+
+    void this.emailService.sendWelcomeEmail(user.email, user.name, user.role).catch(() => undefined);
 
     return user;
   }
@@ -194,6 +198,8 @@ export class UsersService {
       description: `Deactivated user: ${user.name} (${user.username})`,
       companyId: user.companyId,
     });
+
+    void this.emailService.sendUserDeactivationEmail(user.email, user.name).catch(() => undefined);
 
     return user;
   }
