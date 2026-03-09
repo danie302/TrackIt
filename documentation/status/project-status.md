@@ -19,7 +19,7 @@
 | 5 | Email & Notifications | 3 | 10h | Complete | 100% |
 | 6 | Backend Testing | 3 | 15h | Complete | 100% |
 | 7 | Frontend Foundation | 6 | 20h | Complete | 100% |
-| 8 | Auth Screens | 4 | 12h | Not Started | 0% |
+| 8 | Auth Screens | 4 | 12h | Complete | 100% |
 | 9 | Master Admin Screens | 3 | 10h | Not Started | 0% |
 | 10 | Company Admin Screens | 7 | 25h | Not Started | 0% |
 | 11 | Employer Screens | 2 | 8h | Not Started | 0% |
@@ -34,9 +34,9 @@
 | 20 | Deployment | 4 | 15h | Not Started | 0% |
 
 **Total:** 21 phases, ~114 stories, ~332 hours
-**Completed:** 9 phases (0, 1, 2, 3, 4, 5, 6, 7, 15), ~50 stories, ~184 hours
-**Remaining:** 12 phases, ~64 stories, ~148 hours
-**Overall:** ~55% complete
+**Completed:** 10 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 15), ~54 stories, ~196 hours
+**Remaining:** 11 phases, ~60 stories, ~136 hours
+**Overall:** ~59% complete
 
 ---
 
