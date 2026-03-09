@@ -18,7 +18,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@Controller('api/v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 

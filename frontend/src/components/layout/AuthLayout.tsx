@@ -1,7 +1,8 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import { Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import AppLogo from '@/components/common/AppLogo'
+import { useAuthStore } from '@/stores/auth.store'
 
 const features = [
   { icon: '📦', text: 'Track inventory across multiple locations' },
@@ -11,6 +12,12 @@ const features = [
 ]
 
 export default function AuthLayout() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <Box display="flex" minHeight="100vh">
       {/* Left branding panel — hidden on mobile */}
@@ -20,6 +27,7 @@ export default function AuthLayout() {
           flexDirection: 'column',
           justifyContent: 'center',
           width: '45%',
+          paddingTop: 2,
           flexShrink: 0,
           px: 8,
           background: 'linear-gradient(145deg, #0D47A1 0%, #1565C0 45%, #0288D1 100%)',

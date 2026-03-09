@@ -18,4 +18,26 @@ export const theme = createTheme({
   shape: {
     borderRadius: 8,
   },
+  components: {
+    MuiInputBase: {
+      styleOverrides: {
+        input: ({ theme }) => ({
+          '&:-webkit-autofill': {
+            WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+            WebkitTextFillColor: 'inherit',
+            caretColor: 'inherit',
+            borderRadius: 'inherit',
+          },
+          '&:-webkit-autofill:focus': {
+            WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+          },
+          '&:-moz-autofill': {
+            boxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+            caretColor: 'inherit',
+            borderRadius: 'inherit',
+          },
+        }),
+      },
+    },
+  },
 })

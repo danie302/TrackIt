@@ -8,8 +8,6 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
-  HttpCode,
-  HttpStatus,
   UseGuards,
 } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
@@ -22,7 +20,6 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../users/schemas/user.schema';
-import { PaginationQueryDto } from '../common/pagination.dto';
 
 @Controller('companies')
 @UseGuards(RolesGuard)
@@ -46,8 +43,17 @@ export class CompaniesController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: 'createdAt' | 'name',
+    @Query('sortDir') sortDir?: 'asc' | 'desc',
   ): Promise<any> {
-    return this.companiesService.getAllCompanies(page, limit);
+    return this.companiesService.getAllCompanies(
+      page,
+      limit,
+      search,
+      sortBy === 'name' ? 'name' : 'createdAt',
+      sortDir === 'asc' ? 'asc' : 'desc',
+    );
   }
 
   @Get(':id')
@@ -84,6 +90,7 @@ export class CompaniesController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @CurrentUser() currentUser: any,
+    @Query('role') role?: UserRole,
   ): Promise<any> {
     // Users can only see users in their own company unless they are MASTER_ADMIN
     if (currentUser.role !== UserRole.MASTER_ADMIN) {
@@ -92,17 +99,19 @@ export class CompaniesController {
       }
     }
 
-    return this.companiesService.getCompanyUsers(id, page, limit);
+    return this.companiesService.getCompanyUsers(id, page, limit, role);
   }
 
   private toResponseDto(company: any): CompanyResponseDto {
     return {
       _id: company._id.toString(),
       name: company.name,
+      description: company.description,
       nit: company.nit,
       logo: company.logo,
-      createdAt: company.createdAt,
-      updatedAt: company.updatedAt,
+      userCount: company.userCount,
+      createdAt: company.createdAt ?? company.created_at,
+      updatedAt: company.updatedAt ?? company.updated_at,
     };
   }
 }

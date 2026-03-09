@@ -3,9 +3,9 @@ import { UserRole } from '@/types/models'
 import ProtectedRoute from './ProtectedRoute'
 import AuthLayout from '@/components/layout/AuthLayout'
 import AppLayout from '@/components/layout/AppLayout'
+import { ROUTES } from '@/router/routes'
 
 import LoginPage from '@/pages/LoginPage'
-import RegisterPage from '@/pages/RegisterPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import MasterAdminDashboard from '@/pages/MasterAdminDashboard'
@@ -27,13 +27,13 @@ import DevolutionOrdersPage from '@/pages/DevolutionOrdersPage'
 import AuditsPage from '@/pages/AuditsPage'
 import NotFound from '@/pages/NotFound'
 import RootRedirect from './RootRedirect'
+import MasterAdminCompaniesRedirect from './redirects/MasterAdminCompaniesRedirect'
 
 export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
       { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/reset-password', element: <ResetPasswordPage /> },
     ],
@@ -49,10 +49,18 @@ export const router = createBrowserRouter([
           {
             element: <ProtectedRoute allowedRoles={[UserRole.MASTER_ADMIN]} />,
             children: [
-              { path: '/master-admin', element: <MasterAdminDashboard /> },
-              { path: '/companies', element: <CompaniesPage /> },
-              { path: '/companies/new', element: <CompanyCreatePage /> },
-              { path: '/companies/:id', element: <CompanyDetailPage /> },
+              { path: ROUTES.MASTER_ADMIN_DASHBOARD, element: <MasterAdminDashboard /> },
+              { path: ROUTES.MASTER_ADMIN_COMPANIES, element: <MasterAdminDashboard /> },
+              { path: ROUTES.MASTER_ADMIN_COMPANY_CREATE, element: <CompanyCreatePage /> },
+              { path: ROUTES.MASTER_ADMIN_COMPANY_DETAIL, element: <CompanyDetailPage /> },
+
+              // Legacy Master Admin paths (redirect to new)
+              { path: ROUTES.COMPANIES, element: <MasterAdminCompaniesRedirect to={ROUTES.MASTER_ADMIN_COMPANIES} /> },
+              { path: ROUTES.COMPANY_CREATE, element: <MasterAdminCompaniesRedirect to={ROUTES.MASTER_ADMIN_COMPANY_CREATE} /> },
+              { path: ROUTES.COMPANY_DETAIL, element: <MasterAdminCompaniesRedirect to={ROUTES.MASTER_ADMIN_COMPANY_DETAIL} /> },
+
+              // Keep old placeholder route but unused
+              { path: '/master-admin/companies-old', element: <CompaniesPage /> },
             ],
           },
           // Company Admin + Employer routes

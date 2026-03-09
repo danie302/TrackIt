@@ -18,7 +18,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
-  isLoading: false,
+  // Start in loading state so protected routes wait for session restore
+  isLoading: true,
 
   login: async (email, password) => {
     set({ isLoading: true })
@@ -63,7 +64,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   loadFromStorage: async () => {
     const token = localStorage.getItem('accessToken')
-    if (!token) return
+    if (!token) {
+      set({ user: null, accessToken: null, isAuthenticated: false, isLoading: false })
+      return
+    }
     set({ isLoading: true })
     try {
       const { data } = await authApi.getMe()

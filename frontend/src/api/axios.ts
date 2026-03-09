@@ -20,7 +20,18 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    if (error.response?.status !== 401 || original._retry) {
+    const status = error.response?.status
+    const url: string | undefined = original?.url
+
+    // Let auth-related 401s bubble to the caller so forms can show errors
+    if (
+      status !== 401 ||
+      original._retry ||
+      url?.includes('/auth/login') ||
+      url?.includes('/auth/register') ||
+      url?.includes('/auth/forgot-password') ||
+      url?.includes('/auth/reset-password')
+    ) {
       return Promise.reject(error)
     }
 

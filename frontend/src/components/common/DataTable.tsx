@@ -31,7 +31,7 @@ interface DataTableProps<T> {
   emptyMessage?: string
 }
 
-export default function DataTable<T extends Record<string, unknown>>({
+export default function DataTable<T extends object>({
   columns,
   data,
   total,
@@ -89,7 +89,9 @@ export default function DataTable<T extends Record<string, unknown>>({
                 >
                   {columns.map((col) => (
                     <TableCell key={col.key}>
-                      {col.render ? col.render(row) : String(row[col.key] ?? '')}
+                      {col.render
+                        ? col.render(row)
+                        : String((row as unknown as Record<string, unknown>)?.[col.key] ?? '')}
                     </TableCell>
                   ))}
                 </TableRow>

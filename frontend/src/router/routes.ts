@@ -1,11 +1,14 @@
 export const ROUTES = {
   LOGIN: '/login',
-  REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/',
   // Master Admin
   MASTER_ADMIN_DASHBOARD: '/master-admin',
+  MASTER_ADMIN_COMPANIES: '/master-admin/companies',
+  MASTER_ADMIN_COMPANY_DETAIL: '/master-admin/companies/:id',
+  MASTER_ADMIN_COMPANY_CREATE: '/master-admin/companies/create',
+  // Legacy Master Admin paths (kept for compatibility)
   COMPANIES: '/companies',
   COMPANY_DETAIL: '/companies/:id',
   COMPANY_CREATE: '/companies/new',

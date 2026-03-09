@@ -6,6 +6,7 @@ export type CompanyDocument = Company & Document;
 @Schema({ timestamps: true })
 export class Company {
   name!: string;
+  description?: string;
   logo?: string;
   nit!: string;
   users?: Types.ObjectId[];

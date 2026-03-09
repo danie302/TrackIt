@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
-import Divider from '@mui/material/Divider'
 import CircularProgress from '@mui/material/CircularProgress'
 import InputAdornment from '@mui/material/InputAdornment'
 import { useAuthStore } from '@/stores/auth.store'
@@ -140,7 +139,7 @@ export default function LoginPage() {
         disabled={loading}
         sx={{
           mt: 1,
-          mb: 3,
+          mb: 2,
           py: 1.4,
           borderRadius: 2,
           fontWeight: 600,
@@ -151,31 +150,6 @@ export default function LoginPage() {
         }}
       >
         {loading ? <CircularProgress size={22} color="inherit" /> : 'Sign In'}
-      </Button>
-
-      <Divider sx={{ mb: 3 }}>
-        <Typography variant="caption" color="text.secondary">
-          New to TrackIt?
-        </Typography>
-      </Divider>
-
-      <Button
-        component={Link}
-        to={ROUTES.REGISTER}
-        variant="outlined"
-        fullWidth
-        size="large"
-        sx={{
-          py: 1.4,
-          borderRadius: 2,
-          fontWeight: 600,
-          fontSize: 15,
-          textTransform: 'none',
-          borderColor: 'rgba(21,101,192,0.3)',
-          '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(21,101,192,0.04)' },
-        }}
-      >
-        Create an account
       </Button>
     </Box>
   )

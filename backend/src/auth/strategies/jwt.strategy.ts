@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { UsersService } from '../../users/users.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { UserDocument } from '../../users/schemas/user.schema';
@@ -13,6 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,
+    @InjectModel('User') private userModel: Model<UserDocument>,
   ) {
     const accessSecret =
       configService.get<string>('JWT_ACCESS_SECRET') ??
@@ -28,10 +31,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<UserDocument> {
-    const user = await this.usersService.findById(payload.sub);
-    if (!user || !user.isActive) {
+    // Read from raw collection so it matches seeded documents and AuthService.login
+    const doc = (await this.userModel.collection.findOne({
+      _id: new Types.ObjectId(payload.sub),
+    })) as any;
+
+    if (!doc || doc.isActive === false) {
       throw new UnauthorizedException('User not found or inactive');
     }
-    return user;
+
+    return doc as UserDocument;
   }
 }

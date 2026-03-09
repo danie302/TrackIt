@@ -16,6 +16,11 @@ function createMockModel() {
       limit: jest.fn().mockReturnThis(),
       exec: jest.fn(),
     }),
+    collection: {
+      aggregate: jest.fn().mockReturnValue({
+        toArray: jest.fn(),
+      }),
+    },
     findById: jest.fn().mockReturnValue({ exec: jest.fn() }),
     findOne: jest.fn().mockReturnValue({ exec: jest.fn() }),
     findByIdAndUpdate: jest.fn().mockReturnValue({ exec: jest.fn() }),
@@ -30,6 +35,7 @@ const mockAuditsService = {
 
 const mockUsersService = {
   getUsersByCompany: jest.fn(),
+  countUsersByCompanyIds: jest.fn(),
 };
 
 describe('CompaniesService', () => {
@@ -105,24 +111,33 @@ describe('CompaniesService', () => {
 
   describe('getCompanyById', () => {
     it('throws NotFoundException if company not found', async () => {
-      mockModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(null) });
+      mockModel.collection.aggregate.mockReturnValue({
+        toArray: jest.fn().mockResolvedValue([]),
+      });
 
       await expect(service.getCompanyById(companyId)).rejects.toThrow(NotFoundException);
       await expect(service.getCompanyById(companyId)).rejects.toThrow('Company not found');
     });
 
     it('returns company if found', async () => {
-      const company = { _id: companyId, name: 'ACME' };
-      mockModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(company) });
+      const company = { _id: new Types.ObjectId(), name: 'ACME' };
+      mockModel.collection.aggregate.mockReturnValue({
+        toArray: jest.fn().mockResolvedValue([company]),
+      });
+      mockUsersService.countUsersByCompanyIds.mockResolvedValue({
+        [company._id.toString()]: 2,
+      });
 
       const result = await service.getCompanyById(companyId);
       expect(result).toBe(company);
+      expect((result as any).userCount).toBe(2);
     });
   });
 
   describe('getAllCompanies', () => {
     it('returns paginated result', async () => {
-      const fakeCompanies = [{ _id: new Types.ObjectId() }];
+      const c1 = { _id: new Types.ObjectId() };
+      const fakeCompanies = [c1];
       mockModel.find.mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
@@ -130,13 +145,18 @@ describe('CompaniesService', () => {
         exec: jest.fn().mockResolvedValue(fakeCompanies),
       });
       mockModel.countDocuments.mockReturnValue({ exec: jest.fn().mockResolvedValue(1) });
+      mockUsersService.countUsersByCompanyIds.mockResolvedValue({
+        [c1._id.toString()]: 3,
+      });
 
       const result = await service.getAllCompanies(1, 10);
 
-      expect(result.data).toBe(fakeCompanies);
+      expect(result.data).toHaveLength(1);
+      expect((result.data as any)[0]._id).toEqual(c1._id);
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(10);
+      expect((result.data as any)[0].userCount).toBe(3);
     });
   });
 
@@ -207,7 +227,7 @@ describe('CompaniesService', () => {
 
       const result = await service.getCompanyUsers(companyId, 1, 10);
 
-      expect(mockUsersService.getUsersByCompany).toHaveBeenCalledWith(companyId, 1, 10);
+      expect(mockUsersService.getUsersByCompany).toHaveBeenCalledWith(companyId, 1, 10, undefined);
       expect(result).toBe(paginatedResult);
     });
   });

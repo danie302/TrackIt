@@ -7,6 +7,10 @@ export class CreateCompanyDto {
 
   @IsOptional()
   @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
   logo?: string;
 
   @IsString()
@@ -25,6 +29,10 @@ export class UpdateCompanyDto {
 
   @IsOptional()
   @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
   logo?: string;
 
   @IsOptional()
@@ -37,8 +45,10 @@ export class UpdateCompanyDto {
 export class CompanyResponseDto {
   _id!: string;
   name!: string;
+  description?: string;
   logo?: string;
   nit!: string;
+  userCount?: number;
   users?: string[];
   inventories?: string[];
   createdAt!: Date;

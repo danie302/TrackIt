@@ -20,6 +20,7 @@ services:
     volumes:
       - ../backend:/app
       - /app/node_modules
+      - ../docker:/docker
     environment:
       - NODE_ENV=development
       - PORT=3000

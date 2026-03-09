@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CompanyDocument } from './schemas/company.schema';
 import { UsersService } from '../users/users.service';
+import { UserRole } from '../users/schemas/user.schema';
 import { AuditsService } from '../audits/audits.service';
 import { EntityType, AuditAction } from '../audits/schemas/audit.schema';
 import {
@@ -19,13 +20,19 @@ import {
 export interface CreateCompanyDto {
   name: string;
   nit: string;
+  description?: string;
   logo?: string;
 }
 
 export interface UpdateCompanyDto {
   name?: string;
   nit?: string;
+  description?: string;
   logo?: string;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 @Injectable()
@@ -43,6 +50,7 @@ export class CompaniesService {
     }
     const company = await this.companyModel.create({
       name: dto.name,
+      description: dto.description,
       nit: dto.nit.trim(),
       logo: dto.logo,
     });
@@ -61,28 +69,78 @@ export class CompaniesService {
   }
 
   async getCompanyById(id: string): Promise<CompanyDocument> {
-    const company = await this.companyModel.findById(id).exec();
+    const [company] = await this.companyModel.collection
+      .aggregate([
+        { $match: { _id: new Types.ObjectId(id) } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            description: 1,
+            nit: 1,
+            logo: 1,
+            createdAt: '$created_at',
+            updatedAt: '$updated_at',
+          },
+        },
+      ])
+      .toArray();
+
     if (!company) {
       throw new NotFoundException('Company not found');
     }
-    return company;
+
+    const counts = await this.usersService.countUsersByCompanyIds([company._id.toString()]);
+    return Object.assign(company, {
+      userCount: counts[company._id.toString()] ?? 0,
+    }) as unknown as CompanyDocument;
   }
 
   async getAllCompanies(
     page = 1,
     limit = 10,
-  ): Promise<PaginatedResult<CompanyDocument>> {
+    search?: string,
+    sortBy: 'createdAt' | 'name' = 'createdAt',
+    sortDir: 'asc' | 'desc' = 'desc',
+  ): Promise<PaginatedResult<(CompanyDocument & { userCount?: number })>> {
     const l = normalizeLimit(limit);
+    const q = search?.trim();
+    const filter: Record<string, unknown> = {};
+    if (q) {
+      const re = new RegExp(escapeRegex(q), 'i');
+      filter.$or = [{ name: re }, { description: re }, { nit: re }];
+    }
+
+    const sort: Record<string, 1 | -1> =
+      sortBy === 'name'
+        ? { name: sortDir === 'asc' ? 1 : -1, createdAt: -1 }
+        : { createdAt: sortDir === 'asc' ? 1 : -1 };
+
     const [data, total] = await Promise.all([
       this.companyModel
-        .find()
-        .sort({ createdAt: -1 })
+        .find(filter)
+        .sort(sort)
         .skip(paginateSkip(page, l))
         .limit(l)
         .exec(),
-      this.companyModel.countDocuments().exec(),
+      this.companyModel.countDocuments(filter).exec(),
     ]);
-    return toPaginatedResult(data, total, page, l);
+
+    const counts = await this.usersService.countUsersByCompanyIds(
+      data.map((c) => c._id.toString()),
+    );
+
+    const withCounts = data.map((doc) => {
+      const raw = (doc as any).toObject ? (doc as any).toObject() : doc;
+      return {
+        ...raw,
+        userCount: counts[doc._id.toString()] ?? 0,
+        createdAt: raw.createdAt ?? raw.created_at,
+        updatedAt: raw.updatedAt ?? raw.updated_at,
+      };
+    });
+
+    return toPaginatedResult(withCounts as any, total, page, l);
   }
 
   async updateCompany(
@@ -95,9 +153,11 @@ export class CompaniesService {
       throw new NotFoundException('Company not found');
     }
 
-    if (dto.nit !== undefined) {
+    const toSet: UpdateCompanyDto = { ...dto };
+    if (toSet.nit !== undefined) {
+      toSet.nit = toSet.nit.trim();
       const existing = await this.companyModel
-        .findOne({ nit: dto.nit.trim(), _id: { $ne: id } })
+        .findOne({ nit: toSet.nit, _id: { $ne: id } })
         .exec();
       if (existing) {
         throw new ConflictException('Company with this NIT already exists');
@@ -107,7 +167,7 @@ export class CompaniesService {
     const company = await this.companyModel
       .findByIdAndUpdate(
         id,
-        { $set: dto },
+        { $set: toSet },
         { new: true },
       )
       .exec();
@@ -124,7 +184,7 @@ export class CompaniesService {
       description: `Updated company: ${company.name}`,
       companyId: company._id,
       metadata: {
-        changes: dto,
+        changes: toSet,
       },
     });
 
@@ -135,7 +195,8 @@ export class CompaniesService {
     companyId: string,
     page = 1,
     limit = 10,
+    role?: UserRole,
   ): Promise<PaginatedResult<unknown>> {
-    return this.usersService.getUsersByCompany(companyId, page, limit);
+    return this.usersService.getUsersByCompany(companyId, page, limit, role);
   }
 }

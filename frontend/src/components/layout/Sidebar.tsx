@@ -18,7 +18,7 @@ interface NavItem {
 const navByRole: Record<UserRole, NavItem[]> = {
   [UserRole.MASTER_ADMIN]: [
     { label: 'Dashboard', path: ROUTES.MASTER_ADMIN_DASHBOARD },
-    { label: 'Companies', path: ROUTES.COMPANIES },
+    { label: 'Companies', path: ROUTES.MASTER_ADMIN_COMPANIES },
   ],
   [UserRole.COMPANY_ADMIN]: [
     { label: 'Dashboard', path: ROUTES.COMPANY_ADMIN_DASHBOARD },

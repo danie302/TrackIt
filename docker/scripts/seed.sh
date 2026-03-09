@@ -9,15 +9,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
 
 COMPOSE="docker compose -f $DOCKER_DIR/docker-compose.yml -f $DOCKER_DIR/docker-compose.dev.yml"
+EXEC="$COMPOSE exec -e NODE_PATH=/app/node_modules backend"
 
 for arg in "$@"; do
   case "$arg" in
     --clean)
       echo "Cleaning database..."
-      $COMPOSE exec backend npm run seed:clean
+      $EXEC ./node_modules/.bin/ts-node -T -P /docker/seed/tsconfig.seed.json /docker/seed/cleanup.ts
       ;;
   esac
 done
 
 echo "Seeding database..."
-$COMPOSE exec backend npm run seed
+$EXEC ./node_modules/.bin/ts-node -T -P /docker/seed/tsconfig.seed.json /docker/seed/seed-all.ts

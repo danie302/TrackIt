@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument } from '../users/schemas/user.schema';
 import { UserRole, DniType } from '../users/schemas/user.schema';
+import * as bcrypt from 'bcrypt';
 import { TokenService } from './services/token.service';
 import { PasswordValidator } from './validators/password.validator';
 import { PasswordResetService } from './services/password-reset.service';
@@ -78,16 +79,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.userModel
-      .findOne({ email: dto.email.trim().toLowerCase() })
-      .exec();
+    const email = dto.email.trim().toLowerCase();
+    const user = (await this.userModel.collection.findOne({ email })) as any;
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is deactivated');
-    }
-    const match = await user.comparePassword(dto.password);
+    const match = await bcrypt.compare(dto.password, user.password);
     if (!match) {
       throw new UnauthorizedException('Invalid email or password');
     }

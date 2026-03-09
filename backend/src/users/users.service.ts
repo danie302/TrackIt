@@ -115,19 +115,46 @@ export class UsersService {
     companyId: string,
     page = 1,
     limit = 10,
+    role?: UserRole,
   ): Promise<PaginatedResult<UserDocument>> {
     const l = normalizeLimit(limit);
+    const filter: Record<string, unknown> = {};
+    // In production data, companyId is an ObjectId; in tests it may be a string.
+    if (companyId) {
+      filter.companyId =
+        Types.ObjectId.isValid(companyId) ? new Types.ObjectId(companyId) : companyId;
+    }
+    if (role) filter.role = role;
     const [data, total] = await Promise.all([
       this.userModel
-        .find({ companyId })
+        .find(filter)
         .select('-password')
         .sort({ createdAt: -1 })
         .skip(paginateSkip(page, l))
         .limit(l)
         .exec(),
-      this.userModel.countDocuments({ companyId }).exec(),
+      this.userModel.countDocuments(filter).exec(),
     ]);
     return toPaginatedResult(data, total, page, l);
+  }
+
+  async countUsersByCompanyIds(companyIds: string[]): Promise<Record<string, number>> {
+    const ids = companyIds
+      .filter(Boolean)
+      .map((id) => new Types.ObjectId(id));
+    if (ids.length === 0) return {};
+
+    const rows = await this.userModel
+      .aggregate<{ _id: Types.ObjectId; count: number }>([
+        { $match: { companyId: { $in: ids } } },
+        { $group: { _id: '$companyId', count: { $sum: 1 } } },
+      ])
+      .exec();
+
+    return rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row._id.toString()] = row.count;
+      return acc;
+    }, {});
   }
 
   async updateUser(

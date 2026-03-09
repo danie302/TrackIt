@@ -54,8 +54,10 @@ export type EntityType = (typeof EntityType)[keyof typeof EntityType]
 export interface Company {
   _id: string
   name: string
+  description?: string
   logo?: string
   nit: string
+  userCount?: number
   createdAt: string
   updatedAt: string
 }
