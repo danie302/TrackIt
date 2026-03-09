@@ -35,15 +35,28 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <Box>
-        <Typography variant="h5" fontWeight={600} mb={2}>
-          Check Your Email
+      <Box textAlign="center">
+        <Box
+          sx={{
+            width: 72,
+            height: 72,
+            borderRadius: '50%',
+            bgcolor: 'rgba(76,175,80,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 36,
+            mx: 'auto',
+            mb: 3,
+          }}
+        >
+          📬
+        </Box>
+        <Typography variant="h5" fontWeight={700} mb={1}>
+          Check your email
         </Typography>
-        <Alert severity="success" sx={{ mb: 3 }}>
-          If an account exists with that email, a reset code has been sent.
-        </Alert>
         <Typography variant="body2" color="text.secondary" mb={3}>
-          Enter the code along with your new password on the next screen.
+          If an account exists with that address, we've sent a reset code. It expires in 15 minutes.
         </Typography>
         <Button
           component={Link}
@@ -51,32 +64,71 @@ export default function ForgotPasswordPage() {
           variant="contained"
           fullWidth
           size="large"
+          sx={{
+            py: 1.4,
+            borderRadius: 2,
+            fontWeight: 600,
+            textTransform: 'none',
+            boxShadow: '0 4px 12px rgba(21,101,192,0.3)',
+            mb: 2,
+          }}
         >
           Enter Reset Code
         </Button>
+        <Typography variant="body2" color="text.secondary">
+          Didn't receive it?{' '}
+          <Box
+            component="span"
+            onClick={() => setSent(false)}
+            sx={{ color: 'primary.main', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Try again
+          </Box>
+        </Typography>
       </Box>
     )
   }
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Typography variant="h5" fontWeight={600} mb={1}>
-        Forgot Password
+      <Box
+        sx={{
+          width: 56,
+          height: 56,
+          borderRadius: 2,
+          bgcolor: 'rgba(21,101,192,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 28,
+          mb: 2,
+        }}
+      >
+        🔑
+      </Box>
+
+      <Typography variant="h5" fontWeight={700} mb={0.5}>
+        Forgot password?
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Enter your email and we'll send you a reset code.
+        No worries — enter your email and we'll send you a reset code.
       </Typography>
 
-      {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
+      {apiError && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          {apiError}
+        </Alert>
+      )}
 
       <TextField
-        label="Email"
+        label="Email address"
         type="email"
         fullWidth
         margin="normal"
         autoFocus
         error={!!errors.email}
         helperText={errors.email?.message}
+        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
         {...register('email', {
           required: 'Email is required',
           pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' },
@@ -89,14 +141,26 @@ export default function ForgotPasswordPage() {
         fullWidth
         size="large"
         disabled={loading}
-        sx={{ mt: 3, mb: 2 }}
+        sx={{
+          mt: 2,
+          mb: 3,
+          py: 1.4,
+          borderRadius: 2,
+          fontWeight: 600,
+          fontSize: 15,
+          textTransform: 'none',
+          boxShadow: '0 4px 12px rgba(21,101,192,0.3)',
+        }}
       >
-        {loading ? <CircularProgress size={24} color="inherit" /> : 'Send Reset Code'}
+        {loading ? <CircularProgress size={22} color="inherit" /> : 'Send Reset Code'}
       </Button>
 
       <Box textAlign="center">
-        <Link to={ROUTES.LOGIN} style={{ fontSize: 14 }}>
-          Back to Sign In
+        <Link
+          to={ROUTES.LOGIN}
+          style={{ fontSize: 14, color: '#1565C0', textDecoration: 'none', fontWeight: 500 }}
+        >
+          ← Back to Sign In
         </Link>
       </Box>
     </Box>

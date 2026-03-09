@@ -26,6 +26,7 @@ export default function ResetPasswordPage() {
   const notify = useUiStore((s) => s.notify)
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const newPassword = watch('newPassword')
 
@@ -44,25 +45,48 @@ export default function ResetPasswordPage() {
     }
   }
 
+  const fieldSx = { '& .MuiOutlinedInput-root': { borderRadius: 2 } }
+
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Typography variant="h5" fontWeight={600} mb={1}>
-        Reset Password
+      <Box
+        sx={{
+          width: 56,
+          height: 56,
+          borderRadius: 2,
+          bgcolor: 'rgba(21,101,192,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 28,
+          mb: 2,
+        }}
+      >
+        🛡️
+      </Box>
+
+      <Typography variant="h5" fontWeight={700} mb={0.5}>
+        Reset your password
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Enter the code sent to your email and choose a new password.
+        Enter the 6-digit code from your email and choose a new password.
       </Typography>
 
-      {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
+      {apiError && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          {apiError}
+        </Alert>
+      )}
 
       <TextField
-        label="Email"
+        label="Email address"
         type="email"
         fullWidth
         margin="normal"
         autoFocus
         error={!!errors.email}
         helperText={errors.email?.message}
+        sx={fieldSx}
         {...register('email', {
           required: 'Email is required',
           pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' },
@@ -70,41 +94,62 @@ export default function ResetPasswordPage() {
       />
 
       <TextField
-        label="Reset Code"
+        label="Reset code"
         fullWidth
         margin="normal"
-        inputProps={{ maxLength: 6, style: { letterSpacing: 8, fontSize: 20 } }}
+        placeholder="••••••"
         error={!!errors.otp}
         helperText={errors.otp?.message}
+        sx={{
+          ...fieldSx,
+          '& input': { letterSpacing: 6, fontSize: 22, fontWeight: 700, textAlign: 'center' },
+        }}
+        slotProps={{ htmlInput: { maxLength: 6 } }}
         {...register('otp', {
           required: 'Reset code is required',
           minLength: { value: 6, message: 'Enter the 6-digit code' },
+          maxLength: { value: 6, message: 'Code must be 6 digits' },
         })}
       />
 
       <TextField
-        label="New Password"
-        type="password"
+        label="New password"
+        type={showPassword ? 'text' : 'password'}
         fullWidth
         margin="normal"
         error={!!errors.newPassword}
-        helperText={errors.newPassword?.message ?? 'Min 8 chars, uppercase, lowercase, number, special character'}
+        helperText={errors.newPassword?.message}
+        sx={fieldSx}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <Box
+                component="span"
+                onClick={() => setShowPassword((v) => !v)}
+                sx={{ cursor: 'pointer', fontSize: 13, color: 'text.secondary', pr: 1, userSelect: 'none', whiteSpace: 'nowrap' }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </Box>
+            ),
+          },
+        }}
         {...register('newPassword', {
           required: 'New password is required',
           pattern: {
             value: PASSWORD_PATTERN,
-            message: 'Password must be at least 8 characters with uppercase, lowercase, number and special character',
+            message: 'Min 8 chars with uppercase, lowercase, number & special character',
           },
         })}
       />
 
       <TextField
-        label="Confirm New Password"
+        label="Confirm new password"
         type="password"
         fullWidth
         margin="normal"
         error={!!errors.confirmPassword}
         helperText={errors.confirmPassword?.message}
+        sx={fieldSx}
         {...register('confirmPassword', {
           required: 'Please confirm your password',
           validate: (val) => val === newPassword || 'Passwords do not match',
@@ -117,13 +162,25 @@ export default function ResetPasswordPage() {
         fullWidth
         size="large"
         disabled={loading}
-        sx={{ mt: 3, mb: 2 }}
+        sx={{
+          mt: 2,
+          mb: 3,
+          py: 1.4,
+          borderRadius: 2,
+          fontWeight: 600,
+          fontSize: 15,
+          textTransform: 'none',
+          boxShadow: '0 4px 12px rgba(21,101,192,0.3)',
+        }}
       >
-        {loading ? <CircularProgress size={24} color="inherit" /> : 'Reset Password'}
+        {loading ? <CircularProgress size={22} color="inherit" /> : 'Reset Password'}
       </Button>
 
       <Box textAlign="center">
-        <Link to={ROUTES.FORGOT_PASSWORD} style={{ fontSize: 14 }}>
+        <Link
+          to={ROUTES.FORGOT_PASSWORD}
+          style={{ fontSize: 14, color: '#1565C0', textDecoration: 'none', fontWeight: 500 }}
+        >
           Resend reset code
         </Link>
       </Box>
