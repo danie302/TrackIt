@@ -63,7 +63,7 @@ export const router = createBrowserRouter([
               { path: '/master-admin/companies-old', element: <CompaniesPage /> },
             ],
           },
-          // Company Admin + Employer routes
+          // Company Admin + Employer shared routes
           {
             element: <ProtectedRoute allowedRoles={[UserRole.COMPANY_ADMIN, UserRole.EMPLOYER]} />,
             children: [
@@ -71,11 +71,17 @@ export const router = createBrowserRouter([
               { path: '/inventories', element: <InventoriesPage /> },
               { path: '/inventories/new', element: <InventoryCreatePage /> },
               { path: '/inventories/:id', element: <InventoryDetailPage /> },
+              { path: '/orders', element: <OrdersPage /> },
+              { path: '/orders/:id', element: <OrderDetailPage /> },
+            ],
+          },
+          // Company Admin only routes
+          {
+            element: <ProtectedRoute allowedRoles={[UserRole.COMPANY_ADMIN]} />,
+            children: [
               { path: '/users', element: <UsersPage /> },
               { path: '/users/new', element: <UserCreatePage /> },
               { path: '/users/:id', element: <UserDetailPage /> },
-              { path: '/orders', element: <OrdersPage /> },
-              { path: '/orders/:id', element: <OrderDetailPage /> },
             ],
           },
           // Reseller routes

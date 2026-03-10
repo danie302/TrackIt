@@ -2,8 +2,8 @@
 
 ## Overall Progress
 
-**Last Updated:** 2026-03-09
-**Project Status:** Phases 0–9 + 15 Complete — Company Admin Screens Next
+**Last Updated:** 2026-03-10
+**Project Status:** Phases 0–11 + 15 Complete — Reseller Screens Next
 
 ---
 
@@ -21,8 +21,8 @@
 | 7 | Frontend Foundation | 6 | 20h | Complete | 100% |
 | 8 | Auth Screens | 4 | 12h | Complete | 100% |
 | 9 | Master Admin Screens | 3 | 10h | Complete | 100% |
-| 10 | Company Admin Screens | 7 | 25h | Not Started | 0% |
-| 11 | Employer Screens | 2 | 8h | Not Started | 0% |
+| 10 | Company Admin Screens | 7 | 25h | Complete | 100% |
+| 11 | Employer Screens | 2 | 8h | Complete | 100% |
 | 12 | Reseller Screens | 7 | 22h | Not Started | 0% |
 | 13 | Audit Screens | 3 | 10h | Not Started | 0% |
 | 14 | File Upload | 3 | 8h | Not Started | 0% |
@@ -34,9 +34,9 @@
 | 20 | Deployment | 4 | 15h | Not Started | 0% |
 
 **Total:** 21 phases, ~114 stories, ~332 hours
-**Completed:** 12 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15), ~64 stories, ~231 hours
-**Remaining:** 9 phases, ~50 stories, ~101 hours
-**Overall:** ~70% complete
+**Completed:** 13 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15), ~66 stories, ~239 hours
+**Remaining:** 8 phases, ~48 stories, ~93 hours
+**Overall:** ~72% complete
 
 ---
 
@@ -47,7 +47,7 @@
 **Sprint Duration:** N/A
 
 ### Active Stories
-- None — Ready to begin Phase 10 (Company Admin Screens)
+- None — Ready to begin Phase 12 (Reseller Screens)
 
 ### Blocked Stories
 None
@@ -116,7 +116,7 @@ None
 | Phase | Name | Stories | Status | Priority |
 |-------|------|---------|--------|----------|
 | 10 | Company Admin Screens | 7 | Complete | **Critical** |
-| 11 | Employer Screens | 2 | Not Started | **Medium** |
+| 11 | Employer Screens | 2 | Complete | **Medium** |
 | 12 | Reseller Screens | 7 | Not Started | **Critical** |
 | 13 | Audit Screens | 3 | Not Started | **Medium** |
 | 14 | File Upload | 3 | Not Started | **Medium** |
@@ -160,6 +160,11 @@ None
 ---
 
 ## Notes & Decisions
+
+### 2026-03-10
+- **Phases 10 & 11 complete:** Company Admin + Employer Screens fully implemented
+- Employer restricted from user management routes (create/view users)
+- Fixed reseller inventory filtering for company admin/employer views
 
 ### 2026-03-09
 - **Phase 9 complete:** Master Admin Screens implemented with seed tooling
