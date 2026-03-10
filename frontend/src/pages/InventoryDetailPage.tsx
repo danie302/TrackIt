@@ -53,6 +53,7 @@ export default function InventoryDetailPage() {
   const { orders, loading: ordersLoading, error: ordersError, fetchOrders } = useOrdersStore()
 
   const isCompanyAdmin = user?.role === UserRole.COMPANY_ADMIN
+  const canManageItems = user?.role === UserRole.COMPANY_ADMIN || user?.role === UserRole.EMPLOYER
 
   const [tab, setTab] = useState(0)
   const [itemPage, setItemPage] = useState(0)
@@ -181,7 +182,7 @@ export default function InventoryDetailPage() {
       { key: 'brand', label: 'Brand', render: (item) => item.brand },
       { key: 'price', label: 'Price', render: (item) => `$${item.price}` },
     ]
-    if (isCompanyAdmin) {
+    if (canManageItems) {
       cols.push({
         key: 'actions',
         label: 'Actions',
@@ -204,7 +205,7 @@ export default function InventoryDetailPage() {
     }
     return cols
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCompanyAdmin])
+  }, [canManageItems])
 
   const orderColumns = useMemo(() => ([
     { key: 'orderType', label: 'Type', render: (o: OrderRequest) => o.orderType },
@@ -220,7 +221,7 @@ export default function InventoryDetailPage() {
         />
       ),
     },
-    { key: 'createdAt', label: 'Created', render: (o: OrderRequest) => new Date(o.createdAt).toLocaleDateString() },
+    { key: 'createdAt', label: 'Created', render: (o: OrderRequest) => o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—' },
     {
       key: 'actions',
       label: 'Actions',
@@ -278,7 +279,7 @@ export default function InventoryDetailPage() {
               <Box>
                 <Typography variant="h6" fontWeight={800}>{currentInventory?.name ?? '—'}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Created: {currentInventory ? new Date(currentInventory.createdAt).toLocaleDateString() : '—'}
+                  Created: {currentInventory?.createdAt ? new Date(currentInventory.createdAt).toLocaleDateString() : '—'}
                 </Typography>
               </Box>
               {isCompanyAdmin && (
@@ -304,7 +305,7 @@ export default function InventoryDetailPage() {
       {tab === 0 && (
         <Box>
           {itemsError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{itemsError}</Alert>}
-          {isCompanyAdmin && (
+          {canManageItems && (
             <Box mb={2}>
               <Button
                 variant="contained"

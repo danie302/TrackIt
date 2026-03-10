@@ -176,7 +176,7 @@ export default function OrderDetailPage() {
                 </Stack>
                 <Stack direction="row" spacing={2}>
                   <Typography variant="body2" color="text.secondary" sx={{ minWidth: 130, flexShrink: 0 }}>Created</Typography>
-                  <Typography variant="body1">{new Date(currentOrder.createdAt).toLocaleDateString()}</Typography>
+                  <Typography variant="body1">{currentOrder.createdAt ? new Date(currentOrder.createdAt).toLocaleDateString() : '—'}</Typography>
                 </Stack>
                 {currentOrder.approvedAt && (
                   <Stack direction="row" spacing={2}>

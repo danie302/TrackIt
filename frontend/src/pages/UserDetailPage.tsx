@@ -37,6 +37,7 @@ export default function UserDetailPage() {
   const { loading: storeLoading, deactivateUser } = useCompanyUsersStore()
 
   const [pageUser, setPageUser] = useState<User | null>(null)
+  const [companyName, setCompanyName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -51,6 +52,12 @@ export default function UserDetailPage() {
       .get<User>(`/users/${id}`)
       .then(({ data }) => {
         setPageUser(data)
+        if (data.companyId) {
+          api
+            .get<{ name: string }>(`/companies/${data.companyId}`)
+            .then(({ data: company }) => setCompanyName(company.name))
+            .catch(() => setCompanyName(data.companyId ?? null))
+        }
       })
       .catch((err: unknown) => {
         const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -142,8 +149,8 @@ export default function UserDetailPage() {
               <InfoRow label="Role" value={pageUser.role} />
               <InfoRow label="Phone" value={pageUser.cel} />
               <InfoRow label="DNI" value={`${pageUser.typeOfDni} — ${pageUser.dni}`} />
-              <InfoRow label="Company" value={pageUser.companyId} />
-              <InfoRow label="Created" value={new Date(pageUser.createdAt).toLocaleDateString()} />
+              <InfoRow label="Company" value={companyName ?? pageUser.companyId} />
+              <InfoRow label="Created" value={pageUser.createdAt ? new Date(pageUser.createdAt).toLocaleDateString() : '—'} />
             </Stack>
           </CardContent>
         </Card>

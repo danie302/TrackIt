@@ -85,7 +85,7 @@ export default function InventoriesPage() {
       {
         key: 'createdAt',
         label: 'Created',
-        render: (inv) => new Date(inv.createdAt).toLocaleDateString(),
+        render: (inv) => inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—',
       },
     ]
     if (isCompanyAdmin) {

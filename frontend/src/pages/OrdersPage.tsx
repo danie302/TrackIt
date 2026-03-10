@@ -53,7 +53,7 @@ export default function OrdersPage() {
         <Chip size="small" label={o.status} color={statusColor(o.status)} variant="filled" />
       ),
     },
-    { key: 'createdAt', label: 'Created', render: (o: OrderRequest) => new Date(o.createdAt).toLocaleDateString() },
+    { key: 'createdAt', label: 'Created', render: (o: OrderRequest) => o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—' },
     {
       key: 'actions',
       label: 'Actions',

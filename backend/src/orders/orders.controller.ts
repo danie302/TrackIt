@@ -106,8 +106,8 @@ export class OrdersController {
       throw new BadRequestException('Please specify companyId or resellerId');
     }
 
-    // COMPANY_ADMIN can see orders for their company
-    if (currentUser?.role === UserRole.COMPANY_ADMIN) {
+    // COMPANY_ADMIN and EMPLOYER can see orders for their company
+    if (currentUser?.role === UserRole.COMPANY_ADMIN || currentUser?.role === UserRole.EMPLOYER) {
       const userCompanyId = currentUser.companyId?.toString();
       if (!userCompanyId) {
         throw new BadRequestException('User company not found');
@@ -148,7 +148,7 @@ export class OrdersController {
       }
     }
 
-    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+    if (currentUser.role === UserRole.COMPANY_ADMIN || currentUser.role === UserRole.EMPLOYER) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
         throw new ForbiddenException('You can only view orders for your company');
       }
@@ -158,14 +158,14 @@ export class OrdersController {
   }
 
   @Patch(':id/approve')
-  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN, UserRole.EMPLOYER)
   async approve(
     @Param('id') id: string,
     @CurrentUser() currentUser: any,
   ): Promise<OrderResponseDto> {
-    // COMPANY_ADMIN can only approve orders for their company
+    // COMPANY_ADMIN and EMPLOYER can only approve orders for their company
     const order = await this.ordersService.getOrderById(id);
-    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+    if (currentUser.role === UserRole.COMPANY_ADMIN || currentUser.role === UserRole.EMPLOYER) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
         throw new ForbiddenException('You can only approve orders for your company');
       }
@@ -179,15 +179,15 @@ export class OrdersController {
   }
 
   @Patch(':id/reject')
-  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN, UserRole.EMPLOYER)
   async reject(
     @Param('id') id: string,
     @Body('rejectionReason') rejectionReason: string,
     @CurrentUser() currentUser: any,
   ): Promise<OrderResponseDto> {
-    // COMPANY_ADMIN can only reject orders for their company
+    // COMPANY_ADMIN and EMPLOYER can only reject orders for their company
     const order = await this.ordersService.getOrderById(id);
-    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+    if (currentUser.role === UserRole.COMPANY_ADMIN || currentUser.role === UserRole.EMPLOYER) {
       if (order.companyId.toString() !== currentUser.companyId?.toString()) {
         throw new ForbiddenException('You can only reject orders for your company');
       }

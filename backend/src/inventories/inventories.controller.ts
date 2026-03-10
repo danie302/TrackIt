@@ -85,8 +85,8 @@ export class InventoriesController {
       throw new BadRequestException('Please specify companyId or resellerId');
     }
 
-    // COMPANY_ADMIN can see their company's inventories
-    if (currentUser?.role === UserRole.COMPANY_ADMIN) {
+    // COMPANY_ADMIN and EMPLOYER can see their company's inventories
+    if (currentUser?.role === UserRole.COMPANY_ADMIN || currentUser?.role === UserRole.EMPLOYER) {
       const userCompanyId = currentUser.companyId?.toString();
       if (!userCompanyId) {
         throw new BadRequestException('User company not found');
@@ -95,7 +95,7 @@ export class InventoriesController {
         userCompanyId,
         page ?? 1,
         limit ?? 10,
-        false, // Only company inventories
+        true,
       );
     }
 

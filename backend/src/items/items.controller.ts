@@ -94,7 +94,7 @@ export class ItemsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN, UserRole.EMPLOYER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @Param('id') id: string,

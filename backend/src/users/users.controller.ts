@@ -124,17 +124,18 @@ export class UsersController {
       }
     }
 
-    // COMPANY_ADMIN can only see users in their own company
-    if (currentUser.role === UserRole.COMPANY_ADMIN) {
-      if (currentUser.companyId?.toString() !== id) {
-        throw new ForbiddenException('You can only view users in your own company');
-      }
-    }
-
     const user = await this.usersService.findById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // COMPANY_ADMIN can only see users in their own company
+    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+      if (user.companyId?.toString() !== currentUser.companyId?.toString()) {
+        throw new ForbiddenException('You can only view users in your own company');
+      }
+    }
+
     return this.toResponseDto(user);
   }
 
