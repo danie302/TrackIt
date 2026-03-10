@@ -65,6 +65,7 @@ export class InventoriesController {
     @Query('companyId') companyId?: string,
     @Query('resellerId') resellerId?: string,
     @Query('includeReseller') includeReseller?: string,
+    @Query('whitelisted') whitelisted?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
     @CurrentUser() currentUser?: any,
@@ -99,16 +100,16 @@ export class InventoriesController {
       );
     }
 
-    // RESELLER can see their own inventories and whitelisted inventories
+    // RESELLER can see their own inventories or whitelisted company inventories
     if (currentUser?.role === UserRole.RESELLER) {
-      if (resellerId === currentUser._id.toString() || !resellerId) {
-        return this.inventoriesService.getResellerInventories(currentUser._id.toString());
+      if (whitelisted === 'true') {
+        return this.inventoriesService.getWhitelistedInventoriesForReseller(
+          currentUser._id.toString(),
+          page ?? 1,
+          limit ?? 10,
+        );
       }
-      return this.inventoriesService.getWhitelistedInventoriesForReseller(
-        currentUser._id.toString(),
-        page ?? 1,
-        limit ?? 10,
-      );
+      return this.inventoriesService.getResellerInventories(currentUser._id.toString());
     }
 
     throw new ForbiddenException('Unauthorized');

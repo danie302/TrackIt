@@ -5,6 +5,7 @@ import type { PaginatedResult, PaginationParams } from '@/types/api'
 export interface GetOrdersParams extends PaginationParams {
   companyId?: string
   status?: string
+  orderType?: string
 }
 
 export const getOrders = (params?: GetOrdersParams) =>
@@ -13,8 +14,8 @@ export const getOrders = (params?: GetOrdersParams) =>
 export const getOrder = (id: string) =>
   api.get<OrderRequest>(`/orders/${id}`)
 
-export const createOrder = (data: Record<string, unknown>) =>
-  api.post<OrderRequest>('/orders', data)
+export const createStandardOrder = (data: Record<string, unknown>) =>
+  api.post<OrderRequest>('/orders/standard', data)
 
 export const createDevolutionOrder = (data: Record<string, unknown>) =>
   api.post<OrderRequest>('/orders/devolution', data)

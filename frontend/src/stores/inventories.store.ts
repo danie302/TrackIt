@@ -9,6 +9,8 @@ interface InventoriesState {
   loading: boolean
   error: string | null
   fetchInventories: (companyId: string, params?: inventoriesApi.GetInventoriesParams) => Promise<void>
+  fetchResellerInventories: () => Promise<void>
+  fetchWhitelistedInventories: (params?: inventoriesApi.GetInventoriesParams) => Promise<void>
   fetchInventoryById: (id: string) => Promise<void>
   createInventory: (data: Record<string, unknown>) => Promise<Inventory>
   updateInventory: (id: string, data: Record<string, unknown>) => Promise<Inventory>
@@ -25,6 +27,28 @@ export const useInventoriesStore = create<InventoriesState>((set) => ({
     set({ loading: true, error: null })
     try {
       const { data } = await inventoriesApi.getInventories({ companyId, ...params })
+      set({ inventories: data, loading: false })
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to load inventories', loading: false })
+    }
+  },
+
+  fetchResellerInventories: async () => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await inventoriesApi.getInventories()
+      set({ inventories: data, loading: false })
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to load inventories', loading: false })
+    }
+  },
+
+  fetchWhitelistedInventories: async (params) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await inventoriesApi.getInventories({ whitelisted: true, ...params })
       set({ inventories: data, loading: false })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message

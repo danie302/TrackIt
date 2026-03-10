@@ -81,6 +81,7 @@ export class OrdersController {
     @Query('companyId') companyId?: string,
     @Query('resellerId') resellerId?: string,
     @Query('status') status?: string,
+    @Query('orderType') orderType?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
     @CurrentUser() currentUser?: any,
@@ -127,6 +128,7 @@ export class OrdersController {
         page ?? 1,
         limit ?? 10,
         status as any,
+        orderType as any,
       );
     }
 

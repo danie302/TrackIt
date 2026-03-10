@@ -4,6 +4,8 @@ import type { PaginatedResult, PaginationParams } from '@/types/api'
 
 export interface GetInventoriesParams extends PaginationParams {
   companyId?: string
+  resellerId?: string
+  whitelisted?: boolean
 }
 
 export const getInventories = (params?: GetInventoriesParams) =>

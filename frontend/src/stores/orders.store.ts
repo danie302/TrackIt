@@ -9,9 +9,12 @@ interface OrdersState {
   loading: boolean
   error: string | null
   fetchOrders: (companyId: string, params?: ordersApi.GetOrdersParams) => Promise<void>
+  fetchResellerOrders: (params?: ordersApi.GetOrdersParams) => Promise<void>
   fetchOrderById: (id: string) => Promise<void>
   approveOrder: (id: string) => Promise<OrderRequest>
   rejectOrder: (id: string, reason: string) => Promise<OrderRequest>
+  createStandardOrder: (data: Record<string, unknown>) => Promise<OrderRequest>
+  createDevolutionOrder: (data: Record<string, unknown>) => Promise<OrderRequest>
 }
 
 export const useOrdersStore = create<OrdersState>((set) => ({
@@ -24,6 +27,17 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     set({ loading: true, error: null })
     try {
       const { data } = await ordersApi.getOrders({ companyId, ...params })
+      set({ orders: data, loading: false })
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to load orders', loading: false })
+    }
+  },
+
+  fetchResellerOrders: async (params) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await ordersApi.getOrders(params)
       set({ orders: data, loading: false })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -64,6 +78,32 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       set({ error: msg ?? 'Failed to reject order', loading: false })
+      throw err
+    }
+  },
+
+  createStandardOrder: async (payload) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await ordersApi.createStandardOrder(payload)
+      set({ loading: false })
+      return data
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to create order', loading: false })
+      throw err
+    }
+  },
+
+  createDevolutionOrder: async (payload) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await ordersApi.createDevolutionOrder(payload)
+      set({ loading: false })
+      return data
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to create devolution order', loading: false })
       throw err
     }
   },

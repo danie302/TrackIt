@@ -24,6 +24,10 @@ import OrderDetailPage from '@/pages/OrderDetailPage'
 import ResellerDashboard from '@/pages/ResellerDashboard'
 import MyInventoryPage from '@/pages/MyInventoryPage'
 import DevolutionOrdersPage from '@/pages/DevolutionOrdersPage'
+import CompanyInventoriesPage from '@/pages/CompanyInventoriesPage'
+import CompanyInventoryItemsPage from '@/pages/CompanyInventoryItemsPage'
+import CreateStandardOrderPage from '@/pages/CreateStandardOrderPage'
+import CreateDevolutionOrderPage from '@/pages/CreateDevolutionOrderPage'
 import AuditsPage from '@/pages/AuditsPage'
 import NotFound from '@/pages/NotFound'
 import RootRedirect from './RootRedirect'
@@ -91,6 +95,12 @@ export const router = createBrowserRouter([
               { path: '/reseller', element: <ResellerDashboard /> },
               { path: '/my-inventory', element: <MyInventoryPage /> },
               { path: '/devolution-orders', element: <DevolutionOrdersPage /> },
+              { path: '/reseller/companies', element: <CompanyInventoriesPage /> },
+              { path: '/reseller/companies/:inventoryId', element: <CompanyInventoryItemsPage /> },
+              { path: '/reseller/orders/new', element: <CreateStandardOrderPage /> },
+              { path: '/reseller/devolutions/new', element: <CreateDevolutionOrderPage /> },
+              { path: '/orders', element: <OrdersPage /> },
+              { path: '/orders/:id', element: <OrderDetailPage /> },
             ],
           },
           // Shared authenticated routes

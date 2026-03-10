@@ -26,6 +26,10 @@ export const ROUTES = {
   RESELLER_DASHBOARD: '/reseller',
   MY_INVENTORY: '/my-inventory',
   DEVOLUTION_ORDERS: '/devolution-orders',
+  RESELLER_COMPANIES: '/reseller/companies',
+  RESELLER_COMPANY_INVENTORY: '/reseller/companies/:inventoryId',
+  RESELLER_ORDER_CREATE: '/reseller/orders/new',
+  RESELLER_DEVOLUTION_CREATE: '/reseller/devolutions/new',
   // Shared
   AUDITS: '/audits',
   NOT_FOUND: '*',

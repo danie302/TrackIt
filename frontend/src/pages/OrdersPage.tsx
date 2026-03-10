@@ -13,7 +13,7 @@ import DataTable from '@/components/common/DataTable'
 import { useOrdersStore } from '@/stores/orders.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { ROUTES } from '@/router/routes'
-import { type OrderRequest, OrderStatus } from '@/types/models'
+import { type OrderRequest, OrderStatus, UserRole } from '@/types/models'
 
 type StatusFilter = 'ALL' | OrderRequest['status']
 
@@ -26,18 +26,23 @@ function statusColor(status: OrderRequest['status']) {
 export default function OrdersPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
-  const { orders, loading, error, fetchOrders } = useOrdersStore()
+  const { orders, loading, error, fetchOrders, fetchResellerOrders } = useOrdersStore()
+  const isReseller = user?.role === UserRole.RESELLER
 
   const [page, setPage] = useState(0)
   const [limit, setLimit] = useState(10)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
 
   const load = useCallback(() => {
-    if (!user?.companyId) return
     const params: { page: number; limit: number; status?: string } = { page: page + 1, limit }
     if (statusFilter !== 'ALL') params.status = statusFilter
-    void fetchOrders(user.companyId, params)
-  }, [user?.companyId, page, limit, statusFilter, fetchOrders])
+    if (isReseller) {
+      void fetchResellerOrders(params)
+    } else {
+      if (!user?.companyId) return
+      void fetchOrders(user.companyId, params)
+    }
+  }, [user?.companyId, isReseller, page, limit, statusFilter, fetchOrders, fetchResellerOrders])
 
   useEffect(() => {
     load()
@@ -79,7 +84,7 @@ export default function OrdersPage() {
       <Breadcrumbs sx={{ mb: 2 }}>
         <Button
           component={RouterLink}
-          to={ROUTES.COMPANY_ADMIN_DASHBOARD}
+          to={isReseller ? ROUTES.RESELLER_DASHBOARD : ROUTES.COMPANY_ADMIN_DASHBOARD}
           variant="text"
           sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
         >

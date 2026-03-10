@@ -164,10 +164,12 @@ export class OrdersService {
     page = 1,
     limit = 10,
     status?: OrderStatus,
+    orderType?: OrderType,
   ): Promise<PaginatedResult<OrderRequestDocument>> {
     const l = normalizeLimit(limit);
     const filter: Record<string, unknown> = { creator: new Types.ObjectId(resellerId) };
     if (status) filter.status = status;
+    if (orderType) filter.orderType = orderType;
     const [data, total] = await Promise.all([
       this.orderModel
         .find(filter)
