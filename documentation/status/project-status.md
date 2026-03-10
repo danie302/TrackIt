@@ -34,9 +34,9 @@
 | 20 | Deployment | 4 | 15h | Not Started | 0% |
 
 **Total:** 21 phases, ~114 stories, ~332 hours
-**Completed:** 11 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15), ~57 stories, ~206 hours
-**Remaining:** 10 phases, ~57 stories, ~126 hours
-**Overall:** ~62% complete
+**Completed:** 12 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15), ~64 stories, ~231 hours
+**Remaining:** 9 phases, ~50 stories, ~101 hours
+**Overall:** ~70% complete
 
 ---
 
@@ -115,7 +115,7 @@ None
 
 | Phase | Name | Stories | Status | Priority |
 |-------|------|---------|--------|----------|
-| 10 | Company Admin Screens | 7 | Not Started | **Critical** |
+| 10 | Company Admin Screens | 7 | Complete | **Critical** |
 | 11 | Employer Screens | 2 | Not Started | **Medium** |
 | 12 | Reseller Screens | 7 | Not Started | **Critical** |
 | 13 | Audit Screens | 3 | Not Started | **Medium** |
