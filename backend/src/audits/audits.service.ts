@@ -101,4 +101,11 @@ export class AuditsService {
   ): Promise<PaginatedResult<AuditDocument>> {
     return this.getAuditsByEntity(EntityType.ITEM, itemId, page, limit);
   }
+
+  async findById(id: string): Promise<AuditDocument | null> {
+    return this.auditModel
+      .findById(id)
+      .populate('actor', 'name email role')
+      .exec();
+  }
 }

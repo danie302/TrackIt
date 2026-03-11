@@ -29,6 +29,7 @@ import CompanyInventoryItemsPage from '@/pages/CompanyInventoryItemsPage'
 import CreateStandardOrderPage from '@/pages/CreateStandardOrderPage'
 import CreateDevolutionOrderPage from '@/pages/CreateDevolutionOrderPage'
 import AuditsPage from '@/pages/AuditsPage'
+import AuditDetailPage from '@/pages/AuditDetailPage'
 import NotFound from '@/pages/NotFound'
 import RootRedirect from './RootRedirect'
 import MasterAdminCompaniesRedirect from './redirects/MasterAdminCompaniesRedirect'
@@ -75,8 +76,6 @@ export const router = createBrowserRouter([
               { path: '/inventories', element: <InventoriesPage /> },
               { path: '/inventories/new', element: <InventoryCreatePage /> },
               { path: '/inventories/:id', element: <InventoryDetailPage /> },
-              { path: '/orders', element: <OrdersPage /> },
-              { path: '/orders/:id', element: <OrderDetailPage /> },
             ],
           },
           // Company Admin only routes
@@ -99,12 +98,13 @@ export const router = createBrowserRouter([
               { path: '/reseller/companies/:inventoryId', element: <CompanyInventoryItemsPage /> },
               { path: '/reseller/orders/new', element: <CreateStandardOrderPage /> },
               { path: '/reseller/devolutions/new', element: <CreateDevolutionOrderPage /> },
-              { path: '/orders', element: <OrdersPage /> },
-              { path: '/orders/:id', element: <OrderDetailPage /> },
             ],
           },
-          // Shared authenticated routes
+          // Shared authenticated routes (accessible to all roles)
+          { path: '/orders', element: <OrdersPage /> },
+          { path: '/orders/:id', element: <OrderDetailPage /> },
           { path: '/audits', element: <AuditsPage /> },
+          { path: '/audits/:id', element: <AuditDetailPage /> },
         ],
       },
     ],

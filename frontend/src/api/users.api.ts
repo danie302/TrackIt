@@ -30,6 +30,12 @@ export const updateUser = (id: string, data: Record<string, unknown>) =>
 export const deactivateUser = (id: string) =>
   api.patch<User>(`/users/${id}/deactivate`)
 
+export const activateUser = (id: string) =>
+  api.patch<User>(`/users/${id}/activate`)
+
+export const getResellers = () =>
+  api.get<User[]>('/users/resellers')
+
 export interface GetCompanyUsersParams extends PaginationParams {
   role?: UserRole
 }

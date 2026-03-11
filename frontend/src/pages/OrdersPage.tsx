@@ -97,6 +97,16 @@ export default function OrdersPage() {
         <Typography variant="h5" fontWeight={800}>
           Orders
         </Typography>
+        <Stack direction="row" spacing={1} alignItems="center">
+        {isReseller && (
+          <Button
+            variant="contained"
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+            onClick={() => navigate(ROUTES.RESELLER_COMPANIES)}
+          >
+            New order
+          </Button>
+        )}
         <TextField
           select
           label="Status"
@@ -113,6 +123,7 @@ export default function OrdersPage() {
           <MenuItem value={OrderStatus.APPROVED}>Approved</MenuItem>
           <MenuItem value={OrderStatus.REJECTED}>Rejected</MenuItem>
         </TextField>
+        </Stack>
       </Stack>
 
       {error && (

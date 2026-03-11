@@ -38,7 +38,11 @@ export const useInventoriesStore = create<InventoriesState>((set) => ({
     set({ loading: true, error: null })
     try {
       const { data } = await inventoriesApi.getInventories()
-      set({ inventories: data, loading: false })
+      // Backend returns a plain array for reseller own inventories
+      const normalized = Array.isArray(data)
+        ? { data, total: (data as Inventory[]).length, page: 1, limit: 100, totalPages: 1 }
+        : data
+      set({ inventories: normalized, loading: false })
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       set({ error: msg ?? 'Failed to load inventories', loading: false })

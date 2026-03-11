@@ -22,7 +22,7 @@ export class OrderRequest {
   @Prop({ required: true, enum: OrderStatus, default: OrderStatus.PENDING })
   status!: OrderStatus;
 
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   creator!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, required: true })

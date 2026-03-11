@@ -11,6 +11,7 @@ interface CompanyUsersState {
   createUser: (payload: usersApi.CreateUserPayload) => Promise<User>
   updateUser: (id: string, payload: Partial<usersApi.CreateUserPayload>) => Promise<User>
   deactivateUser: (id: string) => Promise<User>
+  activateUser: (id: string) => Promise<User>
   setRoleFilter: (role: UserRole | 'ALL') => void
   roleFilter: UserRole | 'ALL'
 }
@@ -72,6 +73,19 @@ export const useCompanyUsersStore = create<CompanyUsersState>((set, get) => ({
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
       set({ error: msg ?? 'Failed to deactivate user', loading: false })
+      throw err
+    }
+  },
+
+  activateUser: async (id) => {
+    set({ loading: true, error: null })
+    try {
+      const { data } = await usersApi.activateUser(id)
+      set({ loading: false })
+      return data
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      set({ error: msg ?? 'Failed to activate user', loading: false })
       throw err
     }
   },

@@ -112,6 +112,16 @@ export class UsersController {
     return this.usersService.getAllUsers(page, limit, role);
   }
 
+  @Get('resellers')
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  async findAllResellers(@CurrentUser() currentUser: any): Promise<UserResponseDto[]> {
+    const companyId = currentUser.role === UserRole.COMPANY_ADMIN
+      ? currentUser.companyId?.toString()
+      : undefined;
+    const resellers = await this.usersService.getAllResellers(companyId);
+    return resellers.map((u) => this.toResponseDto(u));
+  }
+
   @Get(':id')
   async findOne(
     @Param('id') id: string,
@@ -193,6 +203,23 @@ export class UsersController {
       id,
       currentUser._id.toString(),
     );
+    return this.toResponseDto(user);
+  }
+
+  @Patch(':id/activate')
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  async activate(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: any,
+  ): Promise<UserResponseDto> {
+    if (currentUser.role === UserRole.COMPANY_ADMIN) {
+      const user = await this.usersService.findById(id);
+      if (!user || user.companyId?.toString() !== currentUser.companyId?.toString()) {
+        throw new ForbiddenException('You can only activate users in your own company');
+      }
+    }
+
+    const user = await this.usersService.activateUser(id, currentUser._id.toString());
     return this.toResponseDto(user);
   }
 

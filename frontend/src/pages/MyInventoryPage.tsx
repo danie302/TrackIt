@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -22,20 +22,16 @@ export default function MyInventoryPage() {
   const [limit, setLimit] = useState(10)
   const [selected, setSelected] = useState<string[]>([])
 
-  const resellerInventory = inventories.data[0] ?? null
+  const resellerInventory = inventories.data.length > 0 ? inventories.data[0] : null
 
-  const load = useCallback(async () => {
-    await fetchResellerInventories()
+  useEffect(() => {
+    void fetchResellerInventories()
   }, [fetchResellerInventories])
 
   useEffect(() => {
-    void load()
-  }, [load])
-
-  useEffect(() => {
-    if (!resellerInventory) return
+    if (!resellerInventory?._id) return
     void fetchItems(resellerInventory._id, { page: page + 1, limit })
-  }, [resellerInventory, page, limit, fetchItems])
+  }, [resellerInventory?._id, page, limit, fetchItems])
 
   const toggleSelect = (id: string) => {
     setSelected((prev) =>

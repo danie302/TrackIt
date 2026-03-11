@@ -145,7 +145,10 @@ export class OrdersController {
 
     // Check access based on user role
     if (currentUser.role === UserRole.RESELLER) {
-      if (order.creator.toString() !== currentUser._id.toString()) {
+      const creatorId = typeof order.creator === 'object' && (order.creator as any)._id
+        ? (order.creator as any)._id.toString()
+        : order.creator.toString();
+      if (creatorId !== currentUser._id.toString()) {
         throw new ForbiddenException('You can only view your own orders');
       }
     }
@@ -208,7 +211,9 @@ export class OrdersController {
       _id: order._id.toString(),
       orderType: order.orderType,
       status: order.status,
-      creator: order.creator?.toString(),
+      creator: order.creator && typeof order.creator === 'object' && order.creator.email
+        ? { _id: order.creator._id.toString(), name: order.creator.name, email: order.creator.email }
+        : order.creator?.toString(),
       companyId: order.companyId?.toString(),
       sourceInventoryId: order.sourceInventoryId?.toString(),
       targetInventoryId: order.targetInventoryId?.toString(),

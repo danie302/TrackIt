@@ -34,13 +34,14 @@ export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>()
   const authUser = useAuthStore((s) => s.user)
   const notify = useUiStore((s) => s.notify)
-  const { loading: storeLoading, deactivateUser } = useCompanyUsersStore()
+  const { loading: storeLoading, deactivateUser, activateUser } = useCompanyUsersStore()
 
   const [pageUser, setPageUser] = useState<User | null>(null)
   const [companyName, setCompanyName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [activateOpen, setActivateOpen] = useState(false)
 
   const isCompanyAdmin = authUser?.role === UserRole.COMPANY_ADMIN
 
@@ -73,6 +74,18 @@ export default function UserDetailPage() {
       setPageUser(updated)
       notify('User deactivated', 'success')
       setConfirmOpen(false)
+    } catch {
+      // store handles error
+    }
+  }
+
+  const handleActivate = async () => {
+    if (!id) return
+    try {
+      const updated = await activateUser(id)
+      setPageUser(updated)
+      notify('User activated', 'success')
+      setActivateOpen(false)
     } catch {
       // store handles error
     }
@@ -128,16 +141,28 @@ export default function UserDetailPage() {
                   sx={{ mt: 0.5 }}
                 />
               </Box>
-              {isCompanyAdmin && pageUser.isActive && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
-                  onClick={() => setConfirmOpen(true)}
-                  disabled={storeLoading}
-                >
-                  Deactivate
-                </Button>
+              {isCompanyAdmin && (
+                pageUser.isActive ? (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    onClick={() => setConfirmOpen(true)}
+                    disabled={storeLoading}
+                  >
+                    Deactivate
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                    onClick={() => setActivateOpen(true)}
+                    disabled={storeLoading}
+                  >
+                    Activate
+                  </Button>
+                )
               )}
             </Stack>
 
@@ -164,6 +189,16 @@ export default function UserDetailPage() {
         confirmColor="error"
         onCancel={() => setConfirmOpen(false)}
         onConfirm={handleDeactivate}
+      />
+
+      <ConfirmDialog
+        open={activateOpen}
+        title="Activate user"
+        message={`Activate ${pageUser?.name ?? 'this user'}? They will be able to sign in again.`}
+        confirmLabel="Activate"
+        confirmColor="success"
+        onCancel={() => setActivateOpen(false)}
+        onConfirm={handleActivate}
       />
     </Box>
   )

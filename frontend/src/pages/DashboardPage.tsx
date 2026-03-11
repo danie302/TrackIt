@@ -68,7 +68,7 @@ export default function DashboardPage() {
     if (!user?.companyId) return
     const tasks: Promise<void>[] = [
       fetchInventories(user.companyId, { page: 1, limit: 1 }),
-      fetchOrders(user.companyId, { page: 1, limit: 1 }),
+      fetchOrders(user.companyId, { page: 1, limit: 1, status: 'Pending' }),
     ]
     if (isCompanyAdmin) {
       tasks.push(fetchCompanyUsers(user.companyId, { page: 1, limit: 1 }))
@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
         <Grid item xs={12} sm={6} md={isCompanyAdmin ? 4 : 6}>
           <StatCard
-            title="Orders"
+            title="Pending Orders"
             count={orders.total}
             loading={ordersLoading}
             buttonLabel="View orders"

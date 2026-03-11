@@ -70,6 +70,10 @@ export class OrdersService {
       targetInventoryId: new Types.ObjectId(dto.resellerInventoryId),
       items: dto.itemIds.map((id) => new Types.ObjectId(id)),
     });
+    const [sourceInv, targetInv] = await Promise.all([
+      this.inventoriesService.getInventoryById(dto.companyInventoryId).catch(() => null),
+      this.inventoriesService.getInventoryById(dto.resellerInventoryId).catch(() => null),
+    ]);
     await this.auditsService.createAuditRecord({
       entityType: EntityType.ORDER_REQUEST,
       entityId: order._id as Types.ObjectId,
@@ -77,6 +81,14 @@ export class OrdersService {
       actor: new Types.ObjectId(actorId),
       description: `Standard order created with ${dto.itemIds.length} item(s)`,
       companyId: order.companyId,
+      metadata: {
+        orderType: 'Standard',
+        itemCount: dto.itemIds.length,
+        sourceInventoryId: dto.companyInventoryId,
+        sourceInventoryName: sourceInv?.name,
+        targetInventoryId: dto.resellerInventoryId,
+        targetInventoryName: targetInv?.name,
+      },
     });
     return order;
   }
@@ -100,6 +112,10 @@ export class OrdersService {
       items: dto.itemIds.map((id) => new Types.ObjectId(id)),
       devolutionReason: dto.devolutionReason,
     });
+    const [sourceInv, targetInv] = await Promise.all([
+      this.inventoriesService.getInventoryById(dto.resellerInventoryId).catch(() => null),
+      this.inventoriesService.getInventoryById(dto.companyInventoryId).catch(() => null),
+    ]);
     await this.auditsService.createAuditRecord({
       entityType: EntityType.ORDER_REQUEST,
       entityId: order._id as Types.ObjectId,
@@ -107,6 +123,15 @@ export class OrdersService {
       actor: new Types.ObjectId(actorId),
       description: `Devolution order created: ${dto.devolutionReason}`,
       companyId: order.companyId,
+      metadata: {
+        orderType: 'Devolution',
+        itemCount: dto.itemIds.length,
+        devolutionReason: dto.devolutionReason,
+        sourceInventoryId: dto.resellerInventoryId,
+        sourceInventoryName: sourceInv?.name,
+        targetInventoryId: dto.companyInventoryId,
+        targetInventoryName: targetInv?.name,
+      },
     });
     return order;
   }
@@ -131,7 +156,7 @@ export class OrdersService {
   }
 
   async getOrderById(id: string): Promise<OrderRequestDocument> {
-    const order = await this.orderModel.findById(id).exec();
+    const order = await this.orderModel.findById(id).populate('creator', 'name email').exec();
     if (!order) {
       throw new NotFoundException('Order not found');
     }
@@ -217,6 +242,10 @@ export class OrdersService {
       actor: new Types.ObjectId(approvedBy),
       description: 'Order approved',
       companyId: order.companyId,
+      metadata: {
+        orderType: order.orderType,
+        itemCount: order.items.length,
+      },
     });
 
     void this.notifyCreator(order.creator.toString(), {

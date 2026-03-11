@@ -8,6 +8,7 @@ import {
   UseGuards,
   ForbiddenException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuditsService } from './audits.service';
 import { AuditResponseDto, AuditQueryDto } from './dto/audit.dto';
@@ -23,23 +24,19 @@ export class AuditsController {
   constructor(private readonly auditsService: AuditsService) {}
 
   @Get()
-  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN)
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN, UserRole.EMPLOYER, UserRole.RESELLER)
   async findAll(
     @Query('entityType') entityType?: EntityType,
     @Query('entityId') entityId?: string,
     @Query('action') action?: AuditAction,
     @Query('actor') actor?: string,
+    @Query('companyId') companyId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
     @CurrentUser() currentUser?: any,
   ): Promise<any> {
     // If filtering by entity type and ID
     if (entityType && entityId) {
-      // COMPANY_ADMIN can only see audits for their own company
-      if (currentUser?.role === UserRole.COMPANY_ADMIN) {
-        // TODO: Verify entity belongs to user's company
-      }
-
       return this.auditsService.getAuditsByEntity(
         entityType,
         entityId,
@@ -50,29 +47,60 @@ export class AuditsController {
 
     // If filtering by actor
     if (actor) {
-      // COMPANY_ADMIN can only see audits for their own company's users
-      if (currentUser?.role === UserRole.COMPANY_ADMIN) {
-        // TODO: Verify actor belongs to user's company
-      }
-
-      // Users can only see their own audit trail unless they are MASTER_ADMIN
       if (currentUser?.role !== UserRole.MASTER_ADMIN) {
         if (actor !== currentUser._id.toString()) {
           throw new ForbiddenException('You can only view your own audit trail');
         }
       }
-
-      return this.auditsService.getAuditsByActor(
-        actor,
-        page ?? 1,
-        limit ?? 10,
-      );
+      return this.auditsService.getAuditsByActor(actor, page ?? 1, limit ?? 10);
     }
 
-    // If filtering by company
-    // TODO: Add companyId query parameter
+    // Company-scoped audits
+    if (companyId) {
+      if (currentUser?.role !== UserRole.MASTER_ADMIN) {
+        if (companyId !== currentUser.companyId?.toString()) {
+          throw new ForbiddenException('You can only view audits for your own company');
+        }
+      }
+      return this.auditsService.getAuditsByCompany(companyId, page ?? 1, limit ?? 10, action);
+    }
 
-    throw new BadRequestException('Please specify entityType+entityId or actor');
+    // Auto-scope for company roles
+    if (currentUser?.role === UserRole.COMPANY_ADMIN || currentUser?.role === UserRole.EMPLOYER) {
+      const userCompanyId = currentUser.companyId?.toString();
+      if (!userCompanyId) throw new BadRequestException('User company not found');
+      return this.auditsService.getAuditsByCompany(userCompanyId, page ?? 1, limit ?? 10, action);
+    }
+
+    // Resellers see their own actor audit trail
+    if (currentUser?.role === UserRole.RESELLER) {
+      return this.auditsService.getAuditsByActor(currentUser._id.toString(), page ?? 1, limit ?? 10);
+    }
+
+    throw new BadRequestException('Please specify companyId, entityType+entityId, or actor');
+  }
+
+  @Get(':id')
+  @Roles(UserRole.MASTER_ADMIN, UserRole.COMPANY_ADMIN, UserRole.EMPLOYER, UserRole.RESELLER)
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() currentUser?: any,
+  ): Promise<any> {
+    const audit = await this.auditsService.findById(id);
+    if (!audit) throw new NotFoundException('Audit record not found');
+
+    // Scope check: company roles can only view audits for their company
+    if (
+      currentUser?.role !== UserRole.MASTER_ADMIN &&
+      currentUser?.role !== UserRole.RESELLER
+    ) {
+      const userCompany = currentUser.companyId?.toString();
+      if (audit.companyId?.toString() !== userCompany) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
+    return audit;
   }
 
   @Get('item/:itemId/trail')

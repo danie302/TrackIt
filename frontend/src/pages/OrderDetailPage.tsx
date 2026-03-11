@@ -17,15 +17,18 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import TextField from '@mui/material/TextField'
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import ListItemText from '@mui/material/ListItemText'
+import Table from '@mui/material/Table'
+import TableHead from '@mui/material/TableHead'
+import TableBody from '@mui/material/TableBody'
+import TableRow from '@mui/material/TableRow'
+import TableCell from '@mui/material/TableCell'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { useOrdersStore } from '@/stores/orders.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 import { ROUTES } from '@/router/routes'
-import { OrderStatus, UserRole } from '@/types/models'
+import { OrderStatus, UserRole, type Item, type OrderCreator } from '@/types/models'
+import * as itemsApi from '@/api/items.api'
 
 interface RejectFormValues {
   reason: string
@@ -45,10 +48,11 @@ export default function OrderDetailPage() {
 
   const [approveOpen, setApproveOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [orderItems, setOrderItems] = useState<Item[]>([])
 
   const rejectForm = useForm<RejectFormValues>({ defaultValues: { reason: '' } })
 
-  const isCompanyAdmin = user?.role === UserRole.COMPANY_ADMIN
+  const isCompanyAdmin = user?.role === UserRole.COMPANY_ADMIN || user?.role === UserRole.EMPLOYER
   const isPending = currentOrder?.status === OrderStatus.PENDING
 
   const load = useCallback(() => {
@@ -59,6 +63,13 @@ export default function OrderDetailPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (!currentOrder?.items?.length) return
+    Promise.all(currentOrder.items.map((itemId) => itemsApi.getItem(itemId).then((r) => r.data)))
+      .then(setOrderItems)
+      .catch(() => {/* silently fall back to IDs */})
+  }, [currentOrder?.items])
 
   const handleApprove = async () => {
     if (!id) return
@@ -172,7 +183,14 @@ export default function OrderDetailPage() {
                 </Stack>
                 <Stack direction="row" spacing={2}>
                   <Typography variant="body2" color="text.secondary" sx={{ minWidth: 130, flexShrink: 0 }}>Creator</Typography>
-                  <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{currentOrder.creator}</Typography>
+                  {typeof currentOrder.creator === 'object' ? (
+                    <Box>
+                      <Typography variant="body1">{(currentOrder.creator as OrderCreator).name}</Typography>
+                      <Typography variant="body2" color="text.secondary">{(currentOrder.creator as OrderCreator).email}</Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{currentOrder.creator}</Typography>
+                  )}
                 </Stack>
                 <Stack direction="row" spacing={2}>
                   <Typography variant="body2" color="text.secondary" sx={{ minWidth: 130, flexShrink: 0 }}>Created</Typography>
@@ -201,21 +219,40 @@ export default function OrderDetailPage() {
           </Card>
 
           {currentOrder.items.length > 0 && (
-            <Box maxWidth={640}>
+            <Box maxWidth={780}>
               <Typography variant="subtitle1" fontWeight={700} mb={1}>
                 Items ({currentOrder.items.length})
               </Typography>
-              <Card elevation={1} sx={{ borderRadius: 3 }}>
-                <List dense disablePadding>
-                  {currentOrder.items.map((itemId, i) => (
-                    <ListItem key={itemId} divider={i < currentOrder.items.length - 1}>
-                      <ListItemText
-                        primary={itemId}
-                        primaryTypographyProps={{ variant: 'body2', sx: { fontFamily: 'monospace', wordBreak: 'break-all' } }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
+              <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'grey.50' }}>
+                      <TableCell sx={{ fontWeight: 700 }}>Serial</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>Brand</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }} align="right">Price</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }} align="right">Retail Price</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {currentOrder.items.map((itemId) => {
+                      const item = orderItems.find((it) => it._id === itemId)
+                      return (
+                        <TableRow key={itemId} hover>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                              {item?.serial ?? '—'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>{item?.name ?? itemId}</TableCell>
+                          <TableCell>{item?.brand ?? '—'}</TableCell>
+                          <TableCell align="right">{item ? `$${item.price}` : '—'}</TableCell>
+                          <TableCell align="right">{item ? `$${item.retailPrice}` : '—'}</TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
               </Card>
             </Box>
           )}

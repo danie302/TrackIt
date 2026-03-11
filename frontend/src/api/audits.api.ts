@@ -2,14 +2,22 @@ import api from './axios'
 import type { Audit } from '@/types/models'
 import type { PaginatedResult, PaginationParams } from '@/types/api'
 
-export const getAudits = (params?: PaginationParams) =>
+export interface GetAuditsParams extends PaginationParams {
+  companyId?: string
+  entityType?: string
+  entityId?: string
+  actor?: string
+  action?: string
+}
+
+export const getAudits = (params?: GetAuditsParams) =>
   api.get<PaginatedResult<Audit>>('/audits', { params })
 
-export const getEntityAudits = (entityType: string, entityId: string, params?: PaginationParams) =>
-  api.get<PaginatedResult<Audit>>(`/audits/entity/${entityType}/${entityId}`, { params })
+export const getAuditById = (id: string) =>
+  api.get<Audit>(`/audits/${id}`)
 
-export const getUserAudits = (userId: string, params?: PaginationParams) =>
-  api.get<PaginatedResult<Audit>>(`/audits/user/${userId}`, { params })
+export const getEntityAudits = (entityType: string, entityId: string, params?: PaginationParams) =>
+  api.get<PaginatedResult<Audit>>('/audits', { params: { entityType, entityId, ...params } })
 
 export const getItemAuditTrail = (itemId: string, params?: PaginationParams) =>
-  api.get<PaginatedResult<Audit>>(`/items/${itemId}/audit-trail`, { params })
+  api.get<PaginatedResult<Audit>>(`/audits/item/${itemId}/trail`, { params })

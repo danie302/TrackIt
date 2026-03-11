@@ -229,7 +229,9 @@ export class ItemsService {
       metadata: {
         serial: updated.serial,
         fromInventoryId: oldInventory._id.toString(),
+        fromInventoryName: oldInventory.name,
         toInventoryId: newInventory._id.toString(),
+        toInventoryName: newInventory.name,
       },
     });
 

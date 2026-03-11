@@ -132,6 +132,16 @@ export class UsersService {
     return toPaginatedResult(data, total, page, l);
   }
 
+  async getAllResellers(companyId?: string): Promise<UserDocument[]> {
+    const filter: Record<string, unknown> = { role: UserRole.RESELLER, isActive: true };
+    if (companyId) filter.companyId = new Types.ObjectId(companyId);
+    return this.userModel
+      .find(filter)
+      .select('-password')
+      .sort({ name: 1 })
+      .exec();
+  }
+
   async getUsersByCompany(
     companyId: string,
     page = 1,
@@ -248,6 +258,28 @@ export class UsersService {
     });
 
     void this.emailService.sendUserDeactivationEmail(user.email, user.name).catch(() => undefined);
+
+    return user;
+  }
+
+  async activateUser(id: string, actorId: string): Promise<UserDocument> {
+    const user = await this.userModel
+      .findByIdAndUpdate(id, { $set: { isActive: true } }, { new: true })
+      .select('-password')
+      .exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.auditsService.createAuditRecord({
+      entityType: EntityType.USER,
+      entityId: user._id,
+      action: AuditAction.UPDATE,
+      actor: new Types.ObjectId(actorId),
+      description: `Activated user: ${user.name} (${user.username})`,
+      companyId: user.companyId,
+      metadata: { isActive: true },
+    });
 
     return user;
   }

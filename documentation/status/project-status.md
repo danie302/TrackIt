@@ -2,8 +2,8 @@
 
 ## Overall Progress
 
-**Last Updated:** 2026-03-10
-**Project Status:** Phases 0–11 + 15 Complete — Reseller Screens Next
+**Last Updated:** 2026-03-11
+**Project Status:** Phases 0–13 + 15 Complete — File Upload Next
 
 ---
 
@@ -23,8 +23,8 @@
 | 9 | Master Admin Screens | 3 | 10h | Complete | 100% |
 | 10 | Company Admin Screens | 7 | 25h | Complete | 100% |
 | 11 | Employer Screens | 2 | 8h | Complete | 100% |
-| 12 | Reseller Screens | 7 | 22h | Not Started | 0% |
-| 13 | Audit Screens | 3 | 10h | Not Started | 0% |
+| 12 | Reseller Screens | 7 | 22h | Complete | 100% |
+| 13 | Audit Screens | 3 | 10h | Complete | 100% |
 | 14 | File Upload | 3 | 8h | Not Started | 0% |
 | 15 | Redis Caching | 3 | 8h | Complete | 100% |
 | 16 | Error Handling | 3 | 10h | Not Started | 0% |
@@ -34,9 +34,9 @@
 | 20 | Deployment | 4 | 15h | Not Started | 0% |
 
 **Total:** 21 phases, ~114 stories, ~332 hours
-**Completed:** 13 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15), ~66 stories, ~239 hours
-**Remaining:** 8 phases, ~48 stories, ~93 hours
-**Overall:** ~72% complete
+**Completed:** 15 phases (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15), ~76 stories, ~271 hours
+**Remaining:** 6 phases, ~38 stories, ~61 hours
+**Overall:** ~82% complete
 
 ---
 
@@ -47,7 +47,7 @@
 **Sprint Duration:** N/A
 
 ### Active Stories
-- None — Ready to begin Phase 12 (Reseller Screens)
+- None — Ready to begin Phase 14 (File Upload)
 
 ### Blocked Stories
 None
@@ -117,7 +117,7 @@ None
 |-------|------|---------|--------|----------|
 | 10 | Company Admin Screens | 7 | Complete | **Critical** |
 | 11 | Employer Screens | 2 | Complete | **Medium** |
-| 12 | Reseller Screens | 7 | Not Started | **Critical** |
+| 12 | Reseller Screens | 7 | Complete | **Critical** |
 | 13 | Audit Screens | 3 | Not Started | **Medium** |
 | 14 | File Upload | 3 | Not Started | **Medium** |
 | 16 | Error Handling | 3 | Not Started | **Medium** |
@@ -160,6 +160,13 @@ None
 ---
 
 ## Notes & Decisions
+
+### 2026-03-11
+- **Phase 12 complete:** All 7 Reseller Screens implemented
+- ResellerDashboard, MyInventoryPage, DevolutionOrdersPage, CompanyInventoriesPage, CompanyInventoryItemsPage, CreateStandardOrderPage, CreateDevolutionOrderPage
+- Fixed multiple role/routing bugs: employer item management, company admin user detail access, reseller order route conflicts
+- Order detail page now shows full item table (serial, name, brand, price, retail price)
+- Employers and company admins can both approve/reject orders
 
 ### 2026-03-10
 - **Phases 10 & 11 complete:** Company Admin + Employer Screens fully implemented

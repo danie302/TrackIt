@@ -32,5 +32,6 @@ export const ROUTES = {
   RESELLER_DEVOLUTION_CREATE: '/reseller/devolutions/new',
   // Shared
   AUDITS: '/audits',
+  AUDIT_DETAIL: '/audits/:id',
   NOT_FOUND: '*',
 }

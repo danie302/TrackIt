@@ -20,15 +20,19 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
+import MenuItem from '@mui/material/MenuItem'
 import DataTable from '@/components/common/DataTable'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
+import AuditHistory from '@/components/common/AuditHistory'
 import { useInventoriesStore } from '@/stores/inventories.store'
 import { useItemsStore } from '@/stores/items.store'
 import { useOrdersStore } from '@/stores/orders.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
+import { getResellers } from '@/api/users.api'
+import { addToWhitelist, removeFromWhitelist } from '@/api/inventories.api'
 import { ROUTES } from '@/router/routes'
-import { UserRole, type Item, type OrderRequest } from '@/types/models'
+import { UserRole, type Item, type OrderRequest, type User } from '@/types/models'
 
 interface EditInventoryValues {
   name: string
@@ -65,6 +69,12 @@ export default function InventoryDetailPage() {
   const [itemDialogOpen, setItemDialogOpen] = useState(false)
   const [editItem, setEditItem] = useState<Item | null>(null)
   const [deleteItemTarget, setDeleteItemTarget] = useState<Item | null>(null)
+  const [auditItem, setAuditItem] = useState<Item | null>(null)
+  const [allResellers, setAllResellers] = useState<User[]>([])
+  const [whitelistDialogOpen, setWhitelistDialogOpen] = useState(false)
+  const [selectedResellerId, setSelectedResellerId] = useState('')
+  const [whitelistLoading, setWhitelistLoading] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<User | null>(null)
 
   const invForm = useForm<EditInventoryValues>()
   const itemForm = useForm<ItemFormValues>({
@@ -97,6 +107,43 @@ export default function InventoryDetailPage() {
   useEffect(() => {
     if (tab === 1) loadOrders()
   }, [tab, loadOrders])
+
+  useEffect(() => {
+    if (tab === 3 && isCompanyAdmin) {
+      getResellers().then(({ data }) => setAllResellers(data)).catch(() => {})
+    }
+  }, [tab, isCompanyAdmin])
+
+  const handleAddToWhitelist = async () => {
+    if (!id || !selectedResellerId) return
+    setWhitelistLoading(true)
+    try {
+      await addToWhitelist(id, selectedResellerId)
+      await fetchInventoryById(id)
+      setWhitelistDialogOpen(false)
+      setSelectedResellerId('')
+      notify('Reseller added to whitelist', 'success')
+    } catch {
+      notify('Failed to add reseller', 'error')
+    } finally {
+      setWhitelistLoading(false)
+    }
+  }
+
+  const handleRemoveFromWhitelist = async () => {
+    if (!id || !removeTarget) return
+    setWhitelistLoading(true)
+    try {
+      await removeFromWhitelist(id, removeTarget._id)
+      await fetchInventoryById(id)
+      setRemoveTarget(null)
+      notify('Reseller removed from whitelist', 'success')
+    } catch {
+      notify('Failed to remove reseller', 'error')
+    } finally {
+      setWhitelistLoading(false)
+    }
+  }
 
   const openEditInv = () => {
     invForm.reset({ name: currentInventory?.name ?? '' })
@@ -182,6 +229,18 @@ export default function InventoryDetailPage() {
       { key: 'brand', label: 'Brand', render: (item) => item.brand },
       { key: 'price', label: 'Price', render: (item) => `$${item.price}` },
     ]
+    cols.push({
+      key: 'history',
+      label: '',
+      width: 56,
+      render: (item) => (
+        <Tooltip title="Audit trail">
+          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setAuditItem(item) }}>
+            <span style={{ fontSize: 15 }}>📋</span>
+          </IconButton>
+        </Tooltip>
+      ),
+    })
     if (canManageItems) {
       cols.push({
         key: 'actions',
@@ -300,6 +359,8 @@ export default function InventoryDetailPage() {
       <Tabs value={tab} onChange={(_, v) => setTab(v as number)} sx={{ mb: 2 }}>
         <Tab label="Items" />
         <Tab label="Orders" />
+        <Tab label="Audit" />
+        {isCompanyAdmin && !currentInventory?.isResellerInventory && <Tab label="Whitelist" />}
       </Tabs>
 
       {tab === 0 && (
@@ -345,6 +406,76 @@ export default function InventoryDetailPage() {
             onRowClick={(o) => navigate(ROUTES.ORDER_DETAIL.replace(':id', o._id))}
             emptyMessage="No orders found."
           />
+        </Box>
+      )}
+
+      {tab === 2 && (
+        <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+          <AuditHistory mode="entity" entityType="Inventory" entityId={id} />
+        </Card>
+      )}
+
+      {tab === 3 && isCompanyAdmin && !currentInventory?.isResellerInventory && (
+        <Box>
+          <Box mb={2}>
+            <Button
+              variant="contained"
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+              onClick={() => { setSelectedResellerId(''); setWhitelistDialogOpen(true) }}
+            >
+              Grant access
+            </Button>
+          </Box>
+
+          <Card elevation={1} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            {!currentInventory?.whitelist?.length ? (
+              <Box px={2} py={3}>
+                <Typography variant="body2" color="text.secondary">
+                  No resellers have access to this inventory yet.
+                </Typography>
+              </Box>
+            ) : (
+              <Stack spacing={0}>
+                {currentInventory.whitelist.map((resellerId, i) => {
+                  const reseller = allResellers.find((r) => r._id === resellerId)
+                  return (
+                    <Box
+                      key={resellerId}
+                      sx={{
+                        px: 2,
+                        py: 1.5,
+                        borderBottom: i < currentInventory.whitelist.length - 1 ? '1px solid' : 'none',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {reseller?.name ?? resellerId}
+                          </Typography>
+                          {reseller?.email && (
+                            <Typography variant="caption" color="text.secondary">
+                              {reseller.email}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          sx={{ borderRadius: 2, textTransform: 'none' }}
+                          disabled={whitelistLoading}
+                          onClick={() => setRemoveTarget(reseller ?? { _id: resellerId, name: resellerId } as User)}
+                        >
+                          Remove
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )
+                })}
+              </Stack>
+            )}
+          </Card>
         </Box>
       )}
 
@@ -467,6 +598,62 @@ export default function InventoryDetailPage() {
         onCancel={() => setDeleteItemTarget(null)}
         onConfirm={onDeleteItemConfirm}
       />
+
+      {/* Grant whitelist access dialog */}
+      <Dialog open={whitelistDialogOpen} onClose={() => setWhitelistDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Grant reseller access</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            select
+            label="Reseller"
+            value={selectedResellerId}
+            onChange={(e) => setSelectedResellerId(e.target.value)}
+            fullWidth
+            sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+          >
+            {allResellers
+              .filter((r) => !currentInventory?.whitelist?.includes(r._id))
+              .map((r) => (
+                <MenuItem key={r._id} value={r._id}>
+                  {r.name} — {r.email}
+                </MenuItem>
+              ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWhitelistDialogOpen(false)} sx={{ textTransform: 'none' }}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={!selectedResellerId || whitelistLoading}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+            onClick={handleAddToWhitelist}
+          >
+            Grant access
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Remove from whitelist confirm */}
+      <ConfirmDialog
+        open={!!removeTarget}
+        title="Remove reseller access"
+        message={`Remove access for ${removeTarget?.name ?? 'this reseller'}? They will no longer see this inventory.`}
+        confirmLabel="Remove"
+        confirmColor="error"
+        onCancel={() => setRemoveTarget(null)}
+        onConfirm={handleRemoveFromWhitelist}
+      />
+
+      {/* Item audit trail dialog */}
+      <Dialog open={!!auditItem} onClose={() => setAuditItem(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Audit trail — {auditItem?.name ?? ''}</DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          {auditItem && <AuditHistory mode="item" itemId={auditItem._id} />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAuditItem(null)} sx={{ textTransform: 'none' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

@@ -110,11 +110,17 @@ export interface Item {
   updatedAt: string
 }
 
+export interface OrderCreator {
+  _id: string
+  name: string
+  email: string
+}
+
 export interface OrderRequest {
   _id: string
   orderType: OrderType
   status: OrderStatus
-  creator: string
+  creator: string | OrderCreator
   companyId: string
   sourceInventoryId: string
   targetInventoryId: string
@@ -127,12 +133,19 @@ export interface OrderRequest {
   updatedAt: string
 }
 
+export interface AuditActor {
+  _id: string
+  name: string
+  email: string
+  role: string
+}
+
 export interface Audit {
   _id: string
   entityType: EntityType
   entityId: string
   action: AuditAction
-  actor: string
+  actor: string | AuditActor
   description: string
   metadata?: Record<string, unknown>
   companyId?: string

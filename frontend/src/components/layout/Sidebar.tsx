@@ -35,6 +35,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
   ],
   [UserRole.RESELLER]: [
     { label: 'Dashboard', path: ROUTES.RESELLER_DASHBOARD },
+    { label: 'Company Inventories', path: ROUTES.RESELLER_COMPANIES },
     { label: 'My Inventory', path: ROUTES.MY_INVENTORY },
     { label: 'Orders', path: ROUTES.ORDERS },
     { label: 'Devolutions', path: ROUTES.DEVOLUTION_ORDERS },
